@@ -288,6 +288,17 @@ func handlerWrapper(s *server, w http.ResponseWriter, r *http.Request, rh Reques
 		WritePrometheusMetrics(w)
 		metricsHandlerDuration.UpdateDuration(startTime)
 		return
+	case "/metrics/chy/debug":
+		// This is debug part for compress part. It contains some metric(s) in compress part
+		// such as times different compress-strategies used.
+		if len(*metricsAuthKey) > 0 && r.FormValue("authKey") != *metricsAuthKey {
+			http.Error(w, "The provided authKey doesn't match -metricsAuthKey", http.StatusUnauthorized)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		fmt.Fprintf(w, "chy's debug part.\n")
+		WriteCompressionMetrics(w)
+		return
 	case "/flags":
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		flagutil.WriteFlags(w)

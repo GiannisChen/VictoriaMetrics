@@ -13,18 +13,18 @@ import (
 //
 // The given compressLevel is used for the compression.
 func CompressZSTDLevel(dst, src []byte, compressLevel int) []byte {
-	zstdCompressCalls.Inc()
-	zstdOriginalBytes.Add(len(src))
+	ZstdCompressCalls.Inc()
+	ZstdOriginalBytes.Add(len(src))
 	dstLen := len(dst)
 	dst = zstd.CompressLevel(dst, src, compressLevel)
-	zstdCompressedBytes.Add(len(dst) - dstLen)
+	ZstdCompressedBytes.Add(len(dst) - dstLen)
 	return dst
 }
 
 // DecompressZSTD decompresses src, appends the result to dst and returns
 // the appended dst.
 func DecompressZSTD(dst, src []byte) ([]byte, error) {
-	zstdDecompressCalls.Inc()
+	ZstdDecompressCalls.Inc()
 	b, err := zstd.Decompress(dst, src)
 	if err != nil {
 		return b, fmt.Errorf("cannot decompress zstd block with len=%d to a buffer with len=%d: %w; block data (hex): %X", len(src), len(dst), err, src)
@@ -33,8 +33,8 @@ func DecompressZSTD(dst, src []byte) ([]byte, error) {
 }
 
 func CompressLZ4Level(dst, src []byte, compressLevel int) ([]byte, error) {
-	lz4CompressCalls.Inc()
-	lz4OriginalBytes.Add(len(src))
+	Lz4CompressCalls.Inc()
+	Lz4OriginalBytes.Add(len(src))
 
 	compressedLen := 0
 	if compressLevel == 0 {
@@ -52,12 +52,12 @@ func CompressLZ4Level(dst, src []byte, compressLevel int) ([]byte, error) {
 		}
 	}
 
-	lz4CompressedBytes.Add(compressedLen)
+	Lz4CompressedBytes.Add(compressedLen)
 	return dst, nil
 }
 
 func DecompressLZ4(dst, src []byte) ([]byte, error) {
-	lz4DecompressCalls.Inc()
+	Lz4DecompressCalls.Inc()
 	if _, err := lz4.UncompressBlock(src, dst, nil); err == nil {
 		return dst, nil
 	} else {
@@ -66,15 +66,15 @@ func DecompressLZ4(dst, src []byte) ([]byte, error) {
 }
 
 var (
-	zstdCompressCalls   = metrics.NewCounter(`vm_zstd_block_compress_calls_total`)
-	zstdDecompressCalls = metrics.NewCounter(`vm_zstd_block_decompress_calls_total`)
+	ZstdCompressCalls   = metrics.NewCounter(`vm_zstd_block_compress_calls_total`)
+	ZstdDecompressCalls = metrics.NewCounter(`vm_zstd_block_decompress_calls_total`)
 
-	zstdOriginalBytes   = metrics.NewCounter(`vm_zstd_block_original_bytes_total`)
-	zstdCompressedBytes = metrics.NewCounter(`vm_zstd_block_compressed_bytes_total`)
+	ZstdOriginalBytes   = metrics.NewCounter(`vm_zstd_block_original_bytes_total`)
+	ZstdCompressedBytes = metrics.NewCounter(`vm_zstd_block_compressed_bytes_total`)
 
-	lz4CompressCalls   = metrics.NewCounter(`vm_lz4_block_compress_call_total`)
-	lz4DecompressCalls = metrics.NewCounter(`vm_lz4_block_decompress_calls_total`)
+	Lz4CompressCalls   = metrics.NewCounter(`vm_lz4_block_compress_call_total`)
+	Lz4DecompressCalls = metrics.NewCounter(`vm_lz4_block_decompress_calls_total`)
 
-	lz4OriginalBytes   = metrics.NewCounter(`vm_lz4_block_original_bytes_total`)
-	lz4CompressedBytes = metrics.NewCounter(`vm_lz4_block_compressed_bytes_total`)
+	Lz4OriginalBytes   = metrics.NewCounter(`vm_lz4_block_original_bytes_total`)
+	Lz4CompressedBytes = metrics.NewCounter(`vm_lz4_block_compressed_bytes_total`)
 )

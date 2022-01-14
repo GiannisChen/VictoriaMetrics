@@ -3,6 +3,7 @@ package httpserver
 import (
 	"flag"
 	"fmt"
+	"github.com/VictoriaMetrics/VictoriaMetrics/lib/encoding"
 	"io"
 	"regexp"
 	"strings"
@@ -34,6 +35,34 @@ func WritePrometheusMetrics(w io.Writer) {
 
 	bb := metricsCache.Load().(*bytesutil.ByteBuffer)
 	_, _ = w.Write(bb.B)
+}
+
+// WriteCompressionMetrics write compression metrics to w in Prometheus exposition format.
+func WriteCompressionMetrics(w io.Writer) {
+	fmt.Fprintf(w, "vm_zstd_block_compress_calls_total %d\n", encoding.ZstdCompressCalls.Get())
+	fmt.Fprintf(w, "vm_zstd_block_decompress_calls_total %d\n", encoding.ZstdDecompressCalls.Get())
+	zstdOriginalBytes := encoding.ZstdOriginalBytes.Get()
+	zstdCompressedBytes := encoding.ZstdCompressedBytes.Get()
+	var zstdCompressedRatio float64 = 0
+	if zstdOriginalBytes != 0 {
+		zstdCompressedRatio = float64(zstdCompressedBytes) / float64(zstdOriginalBytes)
+	}
+	fmt.Fprintf(w, "vm_zstd_block_original_bytes_total %d\n", zstdOriginalBytes)
+	fmt.Fprintf(w, "vm_zstd_block_compressed_bytes_total %d\n", zstdCompressedBytes)
+	fmt.Fprintf(w, "vm_zstd_block_compressed_ratio %.4f\n", zstdCompressedRatio)
+	lz4OriginalBytes := encoding.Lz4OriginalBytes.Get()
+	lz4CompressedBytes := encoding.Lz4CompressedBytes.Get()
+	var lz4CompressedRatio float64 = 0
+	if lz4OriginalBytes != 0 {
+		lz4CompressedRatio = float64(lz4CompressedBytes) / float64(lz4OriginalBytes)
+	}
+	fmt.Fprintf(w, "vm_lz4_block_compress_call_total %d\n", encoding.Lz4CompressCalls.Get())
+	fmt.Fprintf(w, "vm_lz4_block_decompress_calls_total %d\n", encoding.Lz4DecompressCalls.Get())
+
+	fmt.Fprintf(w, "vm_lz4_block_original_bytes_total %d\n", lz4OriginalBytes)
+	fmt.Fprintf(w, "vm_lz4_block_compressed_bytes_total %d\n", lz4CompressedBytes)
+	fmt.Fprintf(w, "vm_lz4_block_compressed_ratio %.4f\n", lz4CompressedRatio)
+
 }
 
 var (

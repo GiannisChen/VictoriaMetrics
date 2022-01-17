@@ -9,7 +9,7 @@ package brotli
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <cbrotli/encode.h>
+#include <cbrotli/include/brotli/decode.h>
 struct CompressStreamResult {
   size_t bytes_consumed;
   const uint8_t* output_data;

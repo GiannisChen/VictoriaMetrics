@@ -12,9 +12,9 @@
 #ifndef BROTLI_ENC_ENCODE_H_
 #define BROTLI_ENC_ENCODE_H_
 
-#include <cbrotli/port.h>
-#include <cbrotli/shared_dictionary.h>
-#include <cbrotli/types.h>
+#include <brotli/port.h>
+#include <brotli/shared_dictionary.h>
+#include <brotli/types.h>
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

@@ -10,7 +10,7 @@ package brotli
 /*
 #include <stddef.h>
 #include <stdint.h>
-#include <cbrotli/decode.h>
+#include <cbrotli/include/brotli/decode.h>
 static BrotliDecoderResult DecompressStream(BrotliDecoderState* s,
                                             uint8_t* out, size_t out_len,
                                             const uint8_t* in, size_t in_len,

@@ -2,7 +2,6 @@ package encoding
 
 import (
 	"fmt"
-
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/bytesutil"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/decimal"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/fastnum"
@@ -40,6 +39,14 @@ const (
 	// MarshalTypeNearestDelta is used instead of MarshalTypeZSTDNearestDelta
 	// if compression doesn't help.
 	MarshalTypeNearestDelta = MarshalType(6)
+
+	// Self-Adaptive Compression
+	MarshalConst      = MarshalType(7)
+	MarshalZstd       = MarshalType(10)
+	MarshalDeltaZstd  = MarshalType(11)
+	MarshalXorZstd    = MarshalType(12)
+	MarshalDelta2Zstd = MarshalType(13)
+	MarshalGorilla    = MarshalType(21)
 )
 
 // CheckMarshalType verifies whether the mt is valid.

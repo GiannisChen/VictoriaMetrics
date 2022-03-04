@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestIsConst(t *testing.T) {
@@ -66,6 +67,21 @@ func TestIsGauge(t *testing.T) {
 	f([]int64{5, 6, 4, 3, 2}, true)
 	f([]int64{4, 5, 6, 5, 4, 3, 2}, true)
 	f([]int64{1064, 1132, 1083, 1062, 856, 747}, true)
+}
+
+func TestGetMarshalType(t *testing.T) {
+	f := func(a []int64, mt MarshalType) {
+		t.Helper()
+		if m := GetMarshalType(a); m != mt {
+			t.Fatalf("unexpected isConst for a=%d; got %v; want %v", a, m, mt)
+		}
+	}
+	f([]int64{1}, MarshalConst)
+	f([]int64{1, 2}, MarshalXorZstd)
+	f([]int64{1, 1}, MarshalConst)
+	f([]int64{1, 1, 1}, MarshalConst)
+	f([]int64{1, 0x0000_0000_0000_ffff_ffff, 1}, MarshalDeltaZstd)
+	f([]int64{1, 0x0fff_ffff_ffff_ffff, 0}, MarshalZstd)
 }
 
 func TestEnsureNonDecreasingSequence(t *testing.T) {
@@ -174,7 +190,7 @@ func TestMarshalUnmarshalTimestamps(t *testing.T) {
 }
 
 func TestMarshalUnmarshalValues(t *testing.T) {
-	const precisionBits = 3
+	const precisionBits = 64
 
 	var values []int64
 	v := int64(0)
@@ -182,8 +198,10 @@ func TestMarshalUnmarshalValues(t *testing.T) {
 		v += int64(rand.NormFloat64() * 1e2)
 		values = append(values, v)
 	}
+	start := time.Now()
 	result, mt, firstValue := MarshalValues(nil, values, precisionBits)
 	values2, err := UnmarshalValues(nil, result, mt, firstValue, len(values))
+	t.Logf("%d %.8f\n", time.Now().UnixNano()-start.UnixNano(), float64(len(result))/float64(8*len(values)))
 	if err != nil {
 		t.Fatalf("cannot unmarshal values: %s", err)
 	}

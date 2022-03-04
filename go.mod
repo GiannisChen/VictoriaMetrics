@@ -32,6 +32,12 @@ require (
 )
 
 require (
+	github.com/andybalholm/brotli v1.0.3
+	github.com/google/brotli/go/cbrotli v0.0.0-20220110100810-f4153a09f87c
+	github.com/steakknife/hamming v0.0.0-20180906055917-c99c65617cd3
+)
+
+require (
 	cloud.google.com/go v0.100.2 // indirect
 	cloud.google.com/go/compute v0.1.0 // indirect
 	cloud.google.com/go/iam v0.1.0 // indirect

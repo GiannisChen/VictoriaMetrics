@@ -13,6 +13,28 @@ func HammingDistance(int64s []int64) float64 {
 	return distance / float64(len(int64s))
 }
 
+func ComplexHammingDistance(int64s []int64) (float64, bool) {
+	if int64s == nil || len(int64s) <= 1 {
+		return 0, false
+	}
+
+	var (
+		xor    int64
+		repeat int64
+		averHd float64
+	)
+
+	for i := 1; i < len(int64s); i++ {
+		xor = int64s[i-1] ^ int64s[i]
+		if xor == 0 {
+			repeat++
+		} else {
+			averHd += float64(hamming.CountBitsInt64(xor))
+		}
+	}
+	return averHd / float64(len(int64s)), float64(repeat) > float64(len(int64s))*0.9
+}
+
 func DeltaHammingDistance(int64s []int64) float64 {
 	if int64s == nil || len(int64s) <= 1 {
 		return 0
@@ -53,4 +75,28 @@ func Delta2HammingDistance(int64s []int64) float64 {
 		delta += delta2
 	}
 	return distance / float64(len(int64s))
+}
+
+func DeltaDistance(int64s []int64) float64 {
+	if int64s == nil || len(int64s) <= 1 {
+		return 0
+	}
+	distance := float64(0)
+	for i := 1; i < len(int64s); i++ {
+		distance += float64(int64s[i] - int64s[i-1])
+	}
+	return distance / float64(len(int64s))
+}
+
+func RepeatCounter(int64s []int64) int64 {
+	if int64s == nil || len(int64s) <= 1 {
+		return 0
+	}
+	counter := int64(0)
+	for i := 1; i < len(int64s); i++ {
+		if int64s[i-1] == int64s[i] {
+			counter++
+		}
+	}
+	return counter
 }

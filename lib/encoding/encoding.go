@@ -40,19 +40,23 @@ const (
 	// if compression doesn't help.
 	MarshalTypeNearestDelta = MarshalType(6)
 
+	MarshalTypeSwitching = MarshalType(7)
+
+	MarshalTypeZSTD = MarshalType(8)
+
 	// Self-Adaptive Compression
-	MarshalConst      = MarshalType(7)
-	MarshalZstd       = MarshalType(10)
-	MarshalDeltaZstd  = MarshalType(11)
-	MarshalXorZstd    = MarshalType(12)
-	MarshalDelta2Zstd = MarshalType(13)
-	MarshalGorilla    = MarshalType(21)
+	MarshalConst      = MarshalType(17)
+	MarshalDeltaZstd  = MarshalType(19)
+	MarshalXorZstd    = MarshalType(20)
+	MarshalDelta2Zstd = MarshalType(21)
+	MarshalDelta      = MarshalType(22)
+	MarshalDelta2     = MarshalType(23)
 )
 
 // CheckMarshalType verifies whether the mt is valid.
 func CheckMarshalType(mt MarshalType) error {
-	if mt < 0 || mt > 6 {
-		return fmt.Errorf("MarshalType should be in range [0..6]; got %d", mt)
+	if mt < 0 || mt > 13 {
+		return fmt.Errorf("MarshalType should be in range [0..13]; got %d", mt)
 	}
 	return nil
 }
@@ -94,7 +98,8 @@ func UnmarshalTimestamps(dst []int64, src []byte, mt MarshalType, firstTimestamp
 // precisionBits must be in the range [1...64], where 1 means 50% precision,
 // while 64 means 100% precision, i.e. lossless encoding.
 func MarshalValues(dst []byte, values []int64, precisionBits uint8) (result []byte, mt MarshalType, firstValue int64) {
-	return marshalInt64Array(dst, values, precisionBits)
+	return marshalInt64Array(dst, values, 64)
+	//return marshalInt64s(dst, values, precisionBits)
 }
 
 // UnmarshalValues unmarshals values from src, appends them to dst and returns
@@ -103,6 +108,7 @@ func MarshalValues(dst []byte, values []int64, precisionBits uint8) (result []by
 // firstValue must be the value returned from MarshalValues.
 func UnmarshalValues(dst []int64, src []byte, mt MarshalType, firstValue int64, itemsCount int) ([]int64, error) {
 	dst, err := unmarshalInt64Array(dst, src, mt, firstValue, itemsCount)
+	//dst, err := unmarshalInt64s(dst, src, mt, firstValue, itemsCount)
 	if err != nil {
 		return nil, fmt.Errorf("cannot unmarshal %d values from len(src)=%d bytes: %w", itemsCount, len(src), err)
 	}

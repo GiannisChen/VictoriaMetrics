@@ -81,7 +81,7 @@ func TestGetMarshalType(t *testing.T) {
 	f([]int64{1, 1}, MarshalConst)
 	f([]int64{1, 1, 1}, MarshalConst)
 	f([]int64{1, 0x0000_0000_0000_ffff_ffff, 1}, MarshalDeltaZstd)
-	f([]int64{1, 0x0fff_ffff_ffff_ffff, 0}, MarshalZstd)
+	f([]int64{1, 0x0fff_ffff_ffff_ffff, 0}, MarshalTypeZSTD)
 }
 
 func TestEnsureNonDecreasingSequence(t *testing.T) {

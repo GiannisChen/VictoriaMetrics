@@ -8,6 +8,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"sort"
 	"testing"
 	"time"
 )
@@ -74,8 +75,7 @@ func TestRealData(t *testing.T) {
 		t.Log(err)
 	}
 
-	logs, err := os.OpenFile("./data/real_data_result.log",
-		os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+	logs, err := os.OpenFile("./data/real_data_result_xor.log", os.O_CREATE|os.O_WRONLY, os.ModePerm)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,12 +84,149 @@ func TestRealData(t *testing.T) {
 	w := bufio.NewWriter(logs)
 
 	var newTotal, oldTotal Res
+	var news, olds []Res
+
 	for _, file := range files {
 		float64s, err := readFloat64File("/home/giannischen/go/src/giannischen@nuaa.edu.cn/encoding/generatedata/data/real_world_data/"+file, 8000)
 		if err != nil {
 			t.Fatal(err)
 		}
 		values, _ := decimal.AppendFloatToDecimal(nil, float64s)
+		n, o := testRealData(t, values)
+		newTotal.add(n)
+		oldTotal.add(o)
+
+		n.hd = statistics.HammingDistance(values)
+		o.hd = n.hd
+		news = append(news, n)
+		olds = append(olds, o)
+	}
+	sort.Slice(news, func(i, j int) bool {
+		return news[i].hd < news[j].hd
+	})
+	sort.Slice(olds, func(i, j int) bool {
+		return olds[i].hd < olds[j].hd
+	})
+	t.Log(len(news), len(olds))
+	for i := 0; i < len(news); i++ {
+		if _, err := w.WriteString(fmt.Sprintf("NEW(%.8f)--  ", news[i].hd) + news[i].String()); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := w.WriteString(fmt.Sprintf("OLD(%.8f)--  ", olds[i].hd) + olds[i].String() + "\n"); err != nil {
+			t.Fatal(err)
+
+		}
+		if err := w.Flush(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := w.WriteString("total:\n"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.WriteString("NEW--  " + newTotal.String()); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.WriteString("OLD--  " + oldTotal.String()); err != nil {
+		t.Fatal(err)
+	}
+	w.Flush()
+}
+
+func TestRealDataSolarPower(t *testing.T) {
+	logs, err := os.OpenFile("./data/us_solar_power_result_xor.log", os.O_CREATE|os.O_WRONLY, os.ModePerm)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer logs.Close()
+	w := bufio.NewWriter(logs)
+	var newTotal, oldTotal Res
+
+	for i := 0; i < 15000; i++ {
+		float64s, err := readAllFloat64File(fmt.Sprintf("/home/giannischen/dataSet/solarPower/data/us_solar_power_%d.csv", i))
+		if err != nil {
+			t.Log(err)
+		}
+		for j := 0; j < len(float64s)-8191; j += 8192 {
+			values, _ := decimal.AppendFloatToDecimal(nil, float64s[j:j+8192])
+			n, o := testRealData(t, values)
+			newTotal.add(n)
+			oldTotal.add(o)
+			hd := statistics.HammingDistance(values)
+			if _, err := w.WriteString(fmt.Sprintf("NEW(%.8f)--  ", hd) + n.String()); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := w.WriteString(fmt.Sprintf("OLD(%.8f)--  ", hd) + o.String() + "\n"); err != nil {
+				t.Fatal(err)
+
+			}
+			if err := w.Flush(); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if len(float64s) >= 8192 {
+			values, _ := decimal.AppendFloatToDecimal(nil, float64s[len(float64s)-8192:len(float64s)])
+			n, o := testRealData(t, values)
+			newTotal.add(n)
+			oldTotal.add(o)
+			hd := statistics.HammingDistance(values)
+			if _, err := w.WriteString(fmt.Sprintf("NEW(%.8f)--  ", hd) + n.String()); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := w.WriteString(fmt.Sprintf("OLD(%.8f)--  ", hd) + o.String() + "\n"); err != nil {
+				t.Fatal(err)
+
+			}
+			if err := w.Flush(); err != nil {
+				t.Fatal(err)
+			}
+		}
+
+	}
+
+	if _, err := w.WriteString("total:\n"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.WriteString("NEW--  " + newTotal.String()); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.WriteString("OLD--  " + oldTotal.String()); err != nil {
+		t.Fatal(err)
+	}
+	w.Flush()
+}
+
+func TestRealDataSwitching(t *testing.T) {
+	logs, err := os.OpenFile("./data/switching_result_xor.log", os.O_CREATE|os.O_WRONLY, os.ModePerm)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer logs.Close()
+	w := bufio.NewWriter(logs)
+	var newTotal, oldTotal Res
+
+	float64s, err := readAllFloat64File("/home/giannischen/dataSet/switching/switching.csv")
+	if err != nil {
+		t.Log(err)
+	}
+	for j := 0; j < len(float64s)-8191; j += 8192 {
+		values, _ := decimal.AppendFloatToDecimal(nil, float64s[j:j+8192])
+		n, o := testRealData(t, values)
+		newTotal.add(n)
+		oldTotal.add(o)
+		hd := statistics.HammingDistance(values)
+		if _, err := w.WriteString(fmt.Sprintf("NEW(%.8f)--  ", hd) + n.String()); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := w.WriteString(fmt.Sprintf("OLD(%.8f)--  ", hd) + o.String() + "\n"); err != nil {
+			t.Fatal(err)
+
+		}
+		if err := w.Flush(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(float64s) >= 8192 {
+		values, _ := decimal.AppendFloatToDecimal(nil, float64s[len(float64s)-8192:len(float64s)])
 		n, o := testRealData(t, values)
 		newTotal.add(n)
 		oldTotal.add(o)
@@ -124,6 +261,7 @@ type Res struct {
 	marshalType     MarshalType
 	compressSpeed   int64
 	decompressSpeed int64
+	hd              float64
 }
 
 func (r *Res) add(e Res) {
@@ -198,6 +336,32 @@ func readFloat64File(file string, length uint) ([]float64, error) {
 			return nil, err
 		} else {
 			dst[i] = num
+		}
+	}
+	return dst, nil
+}
+
+func readAllFloat64File(file string) ([]float64, error) {
+	f, err := os.Open(file)
+	defer f.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	dst := make([]float64, 0)
+	r := bufio.NewReader(f)
+	for true {
+		var num float64
+		if n, err := fmt.Fscanf(r, "%f\n", &num); n == 0 || (err != nil && err != io.EOF) {
+			if err == io.EOF {
+				return dst, nil
+			}
+			return nil, err
+		} else {
+			dst = append(dst, num)
+			if err == io.EOF {
+				return dst, nil
+			}
 		}
 	}
 	return dst, nil

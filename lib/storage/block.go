@@ -2,6 +2,7 @@ package storage
 
 import (
 	"fmt"
+	"github.com/VictoriaMetrics/metrics"
 	"math"
 	"sync"
 	"sync/atomic"
@@ -226,6 +227,10 @@ func (b *Block) MarshalData(timestampsBlockOffset, valuesBlockOffset uint64) ([]
 	}
 
 	b.valuesData, b.bh.ValuesMarshalType, b.bh.FirstValue = encoding.MarshalValues(b.valuesData[:0], values, b.bh.PrecisionBits)
+	// test metrics(3)
+	valuesCompressCalls.Inc()
+	originalBytes.Add(8 * len(values)) // int64 consist 8 bytes
+	compressedBytes.Add(len(b.valuesData))
 	b.bh.ValuesBlockOffset = valuesBlockOffset
 	b.bh.ValuesBlockSize = uint32(len(b.valuesData))
 	b.values = b.values[:0]
@@ -276,6 +281,7 @@ func (b *Block) UnmarshalData() error {
 	b.timestampsData = b.timestampsData[:0]
 
 	b.values, err = encoding.UnmarshalValues(b.values[:0], b.valuesData, b.bh.ValuesMarshalType, b.bh.FirstValue, int(b.bh.RowsCount))
+	valuesDecompressCalls.Inc()
 	if err != nil {
 		return err
 	}
@@ -409,3 +415,11 @@ func (b *Block) UnmarshalPortable(src []byte) ([]byte, error) {
 
 	return src, nil
 }
+
+var (
+	valuesCompressCalls   = metrics.NewCounter(`vm_test_values_compress_calls_total`)
+	valuesDecompressCalls = metrics.NewCounter(`vm_test_values_decompress_calls_total`)
+
+	originalBytes   = metrics.NewCounter(`vm_test_values_original_bytes_total`)
+	compressedBytes = metrics.NewCounter(`vm_test_values_compressed_bytes_total`)
+)

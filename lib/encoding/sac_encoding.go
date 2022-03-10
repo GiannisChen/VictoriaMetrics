@@ -9,23 +9,46 @@ import (
 )
 
 // Self-Adaptive Compression Method
-func marshalInt64s(dst []byte, a []int64, _ uint8) ([]byte, MarshalType, int64) {
+func marshalInt64s(dst []byte, a []int64, _ uint8) (result []byte, mt MarshalType, firstValue int64) {
 	if len(a) == 0 {
 		logger.Panicf("BUG: a must contain at least one item")
 	}
-	mt := GetMarshalType(a)
-	firstValue := a[0]
+	mt = GetMarshalType(a)
 	switch mt {
-	case MarshalConst:
-		// do nothing
-	case MarshalDelta2Zstd:
-		dst = CompressDelta2Zstd(dst, a, firstValue)
+	case MarshalTypeConst:
+		firstValue = a[0]
 
-	case MarshalDeltaZstd:
-		dst = CompressDeltaZstd(dst, a, firstValue)
+	case MarshalTypeDeltaConst:
+		firstValue = a[0]
+		dst = MarshalVarInt64(dst, a[1]-a[0])
 
-	case MarshalZstd:
-		dst = CompressZstd(dst, a, firstValue)
+	case MarshalTypeZSTDNearestDelta2:
+		bb := bbPool.Get()
+		bb.B, firstValue = marshalInt64NearestDelta2(bb.B[:0], a, 64)
+		compressLevel := getCompressLevel(len(a))
+		dst = CompressZSTDLevel(dst, bb.B, compressLevel)
+		bbPool.Put(bb)
+
+	case MarshalTypeZSTDNearestDelta:
+		bb := bbPool.Get()
+		bb.B, firstValue = marshalInt64NearestDelta(bb.B[:0], a, 64)
+		compressLevel := getCompressLevel(len(a))
+		dst = CompressZSTDLevel(dst, bb.B, compressLevel)
+		bbPool.Put(bb)
+
+	case MarshalTypeZSTD:
+		bb := bbPool.Get()
+		firstValue = a[0]
+		bb.B = MarshalVarInt64s(bb.B[:0], a)
+		compressLevel := getCompressLevel(len(a))
+		dst = CompressZSTDLevel(dst, bb.B, compressLevel)
+		bbPool.Put(bb)
+
+	case MarshalTypeSwitching:
+		dst, firstValue = MarshalRepeatEliminate(dst, a, 0)
+
+	default:
+		logger.Panicf("BUG: unexpected mt=%d", mt)
 	}
 	return dst, mt, firstValue
 }
@@ -36,7 +59,47 @@ func unmarshalInt64s(dst []int64, src []byte, mt MarshalType, firstValue int64, 
 
 	var err error
 	switch mt {
-	case MarshalConst:
+	case MarshalTypeZSTDNearestDelta:
+		bb := bbPool.Get()
+		bb.B, err = DecompressZSTD(bb.B[:0], src)
+		if err != nil {
+			return nil, fmt.Errorf("cannot decompress zstd data: %w", err)
+		}
+		dst, err = unmarshalInt64NearestDelta(dst, bb.B, firstValue, itemsCount)
+		bbPool.Put(bb)
+		if err != nil {
+			return nil, fmt.Errorf("cannot unmarshal nearest delta data after zstd decompression: %w; src_zstd=%X", err, src)
+		}
+		return dst, nil
+
+	case MarshalTypeZSTDNearestDelta2:
+		bb := bbPool.Get()
+		bb.B, err = DecompressZSTD(bb.B[:0], src)
+		if err != nil {
+			return nil, fmt.Errorf("cannot decompress zstd data: %w", err)
+		}
+		dst, err = unmarshalInt64NearestDelta2(dst, bb.B, firstValue, itemsCount)
+		bbPool.Put(bb)
+		if err != nil {
+			return nil, fmt.Errorf("cannot unmarshal nearest delta2 data after zstd decompression: %w; src_zstd=%X", err, src)
+		}
+		return dst, nil
+
+	case MarshalTypeNearestDelta:
+		dst, err = unmarshalInt64NearestDelta(dst, src, firstValue, itemsCount)
+		if err != nil {
+			return nil, fmt.Errorf("cannot unmarshal nearest delta data: %w", err)
+		}
+		return dst, nil
+
+	case MarshalTypeNearestDelta2:
+		dst, err = unmarshalInt64NearestDelta2(dst, src, firstValue, itemsCount)
+		if err != nil {
+			return nil, fmt.Errorf("cannot unmarshal nearest delta2 data: %w", err)
+		}
+		return dst, nil
+
+	case MarshalTypeConst:
 		if len(src) > 0 {
 			return nil, fmt.Errorf("unexpected data left in const encoding: %d bytes", len(src))
 		}
@@ -54,24 +117,40 @@ func unmarshalInt64s(dst []int64, src []byte, mt MarshalType, firstValue int64, 
 		}
 		return dst, nil
 
-	case MarshalZstd:
-		dst, err = DecompressZstd(dst, src, firstValue, itemsCount)
+	case MarshalTypeDeltaConst:
+		v := firstValue
+		tail, d, err := UnmarshalVarInt64(src)
+		if err != nil {
+			return nil, fmt.Errorf("cannot unmarshal delta value for delta const: %w", err)
+		}
+		if len(tail) > 0 {
+			return nil, fmt.Errorf("unexpected trailing data after delta const (d=%d): %d bytes", d, len(tail))
+		}
+		for itemsCount > 0 {
+			dst = append(dst, v)
+			itemsCount--
+			v += d
+		}
+		return dst, nil
+
+	case MarshalTypeZSTD:
+		bb := bbPool.Get()
+		bb.B, err = DecompressZSTD(bb.B[:0], src)
+		if err != nil {
+			return nil, fmt.Errorf("cannot decompress zstd data: %w", err)
+		}
+		dst = append(dst, make([]int64, itemsCount)...)
+		_, err = UnmarshalVarInt64s(dst, bb.B)
+		bbPool.Put(bb)
 		if err != nil {
 			return nil, fmt.Errorf("cannot unmarshal data after zstd decompression: %w; src_zstd=%X", err, src)
 		}
 		return dst, nil
 
-	case MarshalDeltaZstd:
-		dst, err = DecompressDeltaZstd(dst, src, firstValue, itemsCount)
+	case MarshalTypeSwitching:
+		dst, err = UnmarshalRepeatEliminate(dst, src, firstValue, itemsCount)
 		if err != nil {
-			return nil, fmt.Errorf("cannot unmarshal data after delta-zstd decompression: %w; src_delta_zstd=%X", err, src)
-		}
-		return dst, nil
-
-	case MarshalDelta2Zstd:
-		dst, err = DecompressDelta2Zstd(dst, src, firstValue, itemsCount)
-		if err != nil {
-			return nil, fmt.Errorf("cannot unmarshal data after brotli decompression: %w; src_brotli=%X", err, src)
+			return nil, fmt.Errorf("cannot unmarshal repeat-eliminate data: %w; src_zstd=%X", err, src)
 		}
 		return dst, nil
 
@@ -84,15 +163,25 @@ func unmarshalInt64s(dst []int64, src []byte, mt MarshalType, firstValue int64, 
 // GetMarshalType return the marshal type
 func GetMarshalType(int64s []int64) MarshalType {
 
-	distance := statistics.HammingDistance(int64s)
+	if len(int64s) <= 1 {
+		return MarshalTypeConst
+	}
+	if len(int64s) <= 2 {
+		return MarshalTypeDeltaConst
+	}
+	distance, isRepeat := statistics.ComplexHammingDistance(int64s)
 	if distance == 0 {
-		return MarshalConst
+		return MarshalTypeConst
+	}
+	if isRepeat {
+		return MarshalTypeSwitching
 	}
 	if distance < 1 {
-		return MarshalDelta2Zstd
+		return MarshalTypeZSTDNearestDelta2
 	}
-	if distance >= 22 {
-		return MarshalZstd
+	if distance < 20.5 {
+		return MarshalTypeZSTDNearestDelta
 	}
-	return MarshalDeltaZstd
+
+	return MarshalTypeZSTD
 }

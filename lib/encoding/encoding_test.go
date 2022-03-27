@@ -77,7 +77,7 @@ func TestGetMarshalType(t *testing.T) {
 		}
 	}
 	f([]int64{1}, MarshalConst)
-	f([]int64{1, 2}, MarshalXorZstd)
+	f([]int64{1, 2}, MarshalTypeDeltaXorZSTD)
 	f([]int64{1, 1}, MarshalConst)
 	f([]int64{1, 1, 1}, MarshalConst)
 	f([]int64{1, 0x0000_0000_0000_ffff_ffff, 1}, MarshalDeltaZstd)

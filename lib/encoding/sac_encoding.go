@@ -47,6 +47,9 @@ func marshalInt64s(dst []byte, a []int64, _ uint8) (result []byte, mt MarshalTyp
 	case MarshalTypeSwitching:
 		dst, firstValue = MarshalRepeatEliminate(dst, a, 0)
 
+	case MarshalTypeNearestDelta:
+		dst, firstValue = marshalInt64NearestDelta(dst, a, 64)
+
 	default:
 		logger.Panicf("BUG: unexpected mt=%d", mt)
 	}
@@ -176,10 +179,7 @@ func GetMarshalType(int64s []int64) MarshalType {
 	if isRepeat {
 		return MarshalTypeSwitching
 	}
-	if distance < 1 {
-		return MarshalTypeZSTDNearestDelta2
-	}
-	if distance < 20.5 {
+	if distance < 25 {
 		return MarshalTypeZSTDNearestDelta
 	}
 

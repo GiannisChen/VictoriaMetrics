@@ -1,6 +1,10 @@
 package statistics
 
-import "github.com/steakknife/hamming"
+import (
+	"github.com/steakknife/hamming"
+	"math"
+	"math/bits"
+)
 
 func HammingDistance(int64s []int64) float64 {
 	if int64s == nil || len(int64s) <= 1 {
@@ -33,6 +37,67 @@ func ComplexHammingDistance(int64s []int64) (float64, bool) {
 		}
 	}
 	return averHd / float64(len(int64s)), float64(repeat) > float64(len(int64s))*0.9
+}
+
+func ComplexHammingDistance2(int64s []int64) (float64, float64, float64, float64, float64, float64, float64, float64, float64) {
+	if int64s == nil || len(int64s) <= 1 {
+		return 0, 0, 0, 0, 0, 0, 0, 0, 0
+	}
+
+	var (
+		repeat            int64
+		averHd            float64
+		averDeltaHd       float64
+		deltaLeadingZero  float64
+		deltaTrailingZero float64
+
+		meanHd      float64
+		meanDeltaHd float64
+		meanDeltaLZ float64
+		meanDeltaTZ float64
+
+		xor       int64
+		delta     int64
+		prevDelta int64
+	)
+
+	for i := 1; i < len(int64s); i++ {
+		xor = int64s[i-1] ^ int64s[i]
+		delta = int64s[i] - int64s[i-1]
+		if xor == 0 {
+			repeat++
+		} else {
+			averHd += float64(hamming.CountBitsInt64(xor))
+		}
+		averDeltaHd += float64(hamming.Int64(delta, prevDelta))
+		deltaLeadingZero += float64(bits.LeadingZeros64(uint64(delta)))
+		deltaTrailingZero += float64(bits.TrailingZeros64(uint64(delta)))
+		prevDelta = delta
+	}
+	averHd /= float64(len(int64s) - 1)
+	averDeltaHd /= float64(len(int64s) - 1)
+	deltaLeadingZero /= float64(len(int64s) - 1)
+	deltaTrailingZero /= float64(len(int64s) - 1)
+
+	var hd, dhd, dlz, dtz float64
+	for i := 1; i < len(int64s); i++ {
+		xor = int64s[i-1] ^ int64s[i]
+		delta = int64s[i] - int64s[i-1]
+		hd = float64(hamming.CountBitsInt64(xor)) - averHd
+		dhd = float64(hamming.Int64(delta, prevDelta)) - averDeltaHd
+		dlz = float64(bits.LeadingZeros64(uint64(delta))) - deltaLeadingZero
+		dtz = float64(bits.TrailingZeros64(uint64(delta))) - deltaTrailingZero
+		meanHd = hd * hd
+		meanDeltaHd = dhd * dhd
+		meanDeltaLZ = dlz * dlz
+		meanDeltaTZ = dtz * dtz
+		prevDelta = delta
+	}
+
+	return averHd,
+		float64(repeat) / float64(len(int64s)-1),
+		averDeltaHd, deltaLeadingZero, deltaTrailingZero, meanHd, meanDeltaHd, meanDeltaLZ, meanDeltaTZ
+
 }
 
 func DeltaHammingDistance(int64s []int64) float64 {
@@ -99,4 +164,13 @@ func RepeatCounter(int64s []int64) int64 {
 		}
 	}
 	return counter
+}
+
+func ShannonEntropy(int64s []int64) (e float64) {
+	for _, v := range int64s {
+		if v != 0 { // Entropy needs 0 * log(0) == 0.
+			e -= float64(v) * math.Log(float64(v))
+		}
+	}
+	return
 }

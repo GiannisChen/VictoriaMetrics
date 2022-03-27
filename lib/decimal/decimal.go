@@ -250,6 +250,19 @@ func AppendFloatToDecimal(dst []int64, src []float64) ([]int64, int16) {
 	return dst[:len(dst)+len(va)], minExp
 }
 
+func AppendFloatToInt64(dst []int64, src []float64) ([]int64, int16) {
+	if len(src) == 0 {
+		return dst, 0
+	}
+	// Extend dst capacity in order to eliminate memory allocations below.
+	dst = ExtendInt64sCapacity(dst, len(src))
+	a := dst[len(dst) : len(dst)+len(src)]
+	for i := 0; i < len(src); i++ {
+		a[i] = int64(math.Float64bits(src[i]))
+	}
+	return dst[:len(dst)+len(src)], 0
+}
+
 type vaeBuf struct {
 	va []int64
 	ea []int16

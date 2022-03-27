@@ -27,12 +27,12 @@ func TestCompressDecompressValues(t *testing.T) {
 		u += rand.NormFloat64() * 1e2
 		tmpValues2 = append(tmpValues2, u)
 	}
-	values2, _ = decimal.AppendFloatToDecimal(values2, tmpValues2)
+	values2, _ = decimal.AppendFloatToInt64(values2, tmpValues2)
 
 	for i := 0; i < 8*1024; i++ {
 		tmpValues3 = append(tmpValues3, rand.NormFloat64()*1e2)
 	}
-	values3, _ = decimal.AppendFloatToDecimal(values3, tmpValues3)
+	values3, _ = decimal.AppendFloatToInt64(values3, tmpValues3)
 
 	testCompressDecompressValues(t, values1)
 	testCompressDecompressValues(t, values2)
@@ -70,7 +70,7 @@ func testCompressDecompressValues(t *testing.T, values []int64) {
 }
 
 func TestRealData(t *testing.T) {
-	files, err := readFileName("/home/giannischen/go/src/giannischen@nuaa.edu.cn/encoding/generatedata/data/real_world_data/index.txt", 3117)
+	files, err := ReadFileName("/home/giannischen/go/src/giannischen@nuaa.edu.cn/encoding/generatedata/data/real_world_data/index.txt", 3117)
 	if err != nil {
 		t.Log(err)
 	}
@@ -91,12 +91,12 @@ func TestRealData(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		values, _ := decimal.AppendFloatToDecimal(nil, float64s)
+		values, _ := decimal.AppendFloatToInt64(nil, float64s)
 		n, o := testRealData(t, values)
 		newTotal.add(n)
 		oldTotal.add(o)
 
-		n.hd = statistics.HammingDistance(values)
+		n.hd = statistics.ShannonEntropy(values)
 		o.hd = n.hd
 		news = append(news, n)
 		olds = append(olds, o)
@@ -142,12 +142,12 @@ func TestRealDataSolarPower(t *testing.T) {
 	var newTotal, oldTotal Res
 
 	for i := 0; i < 15000; i++ {
-		float64s, err := readAllFloat64File(fmt.Sprintf("/home/giannischen/dataSet/solarPower/data/us_solar_power_%d.csv", i))
+		float64s, err := ReadAllFloat64File(fmt.Sprintf("/home/giannischen/dataSet/solarPower/data/us_solar_power_%d.csv", i))
 		if err != nil {
 			t.Log(err)
 		}
 		for j := 0; j < len(float64s)-8191; j += 8192 {
-			values, _ := decimal.AppendFloatToDecimal(nil, float64s[j:j+8192])
+			values, _ := decimal.AppendFloatToInt64(nil, float64s[j:j+8192])
 			n, o := testRealData(t, values)
 			newTotal.add(n)
 			oldTotal.add(o)
@@ -164,7 +164,7 @@ func TestRealDataSolarPower(t *testing.T) {
 			}
 		}
 		if len(float64s) >= 8192 {
-			values, _ := decimal.AppendFloatToDecimal(nil, float64s[len(float64s)-8192:len(float64s)])
+			values, _ := decimal.AppendFloatToInt64(nil, float64s[len(float64s)-8192:len(float64s)])
 			n, o := testRealData(t, values)
 			newTotal.add(n)
 			oldTotal.add(o)
@@ -204,12 +204,12 @@ func TestRealDataSwitching(t *testing.T) {
 	w := bufio.NewWriter(logs)
 	var newTotal, oldTotal Res
 
-	float64s, err := readAllFloat64File("/home/giannischen/dataSet/switching/switching.csv")
+	float64s, err := ReadAllFloat64File("/home/giannischen/dataSet/switching/switching.csv")
 	if err != nil {
 		t.Log(err)
 	}
 	for j := 0; j < len(float64s)-8191; j += 8192 {
-		values, _ := decimal.AppendFloatToDecimal(nil, float64s[j:j+8192])
+		values, _ := decimal.AppendFloatToInt64(nil, float64s[j:j+8192])
 		n, o := testRealData(t, values)
 		newTotal.add(n)
 		oldTotal.add(o)
@@ -226,7 +226,7 @@ func TestRealDataSwitching(t *testing.T) {
 		}
 	}
 	if len(float64s) >= 8192 {
-		values, _ := decimal.AppendFloatToDecimal(nil, float64s[len(float64s)-8192:len(float64s)])
+		values, _ := decimal.AppendFloatToInt64(nil, float64s[len(float64s)-8192:len(float64s)])
 		n, o := testRealData(t, values)
 		newTotal.add(n)
 		oldTotal.add(o)
@@ -253,6 +253,74 @@ func TestRealDataSwitching(t *testing.T) {
 		t.Fatal(err)
 	}
 	w.Flush()
+}
+
+func TestRealDataStock(t *testing.T) {
+	logs, err := os.OpenFile("./data/stock_result_xor.log", os.O_CREATE|os.O_WRONLY, os.ModePerm)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer logs.Close()
+	w := bufio.NewWriter(logs)
+
+	for _, i := range []int{0} {
+		for _, j := range []int{2, 3, 4, 5, 7, 8, 9} {
+			var newTotal, oldTotal Res
+
+			float64s, err := ReadAllFloat64File(fmt.Sprintf("/home/giannischen/dataSet/stock2/%d_%d", i, j))
+			if err != nil {
+				t.Log(err)
+			}
+			for k := 0; k < len(float64s)-8191; k += 8192 {
+				values, _ := decimal.AppendFloatToInt64(nil, float64s[k:k+8192])
+				n, o := testRealData(t, values)
+				newTotal.add(n)
+				oldTotal.add(o)
+				//hd := statistics.HammingDistance(values)
+				//if _, err := w.WriteString(fmt.Sprintf("NEW(%.8f)--  ", hd) + n.String()); err != nil {
+				//	t.Fatal(err)
+				//}
+				//if _, err := w.WriteString(fmt.Sprintf("OLD(%.8f)--  ", hd) + o.String() + "\n"); err != nil {
+				//	t.Fatal(err)
+				//
+				//}
+				//if err := w.Flush(); err != nil {
+				//	t.Fatal(err)
+				//}
+			}
+			if len(float64s) >= 8192 {
+				values, _ := decimal.AppendFloatToInt64(nil, float64s[len(float64s)-8192:])
+				n, o := testRealData(t, values)
+				newTotal.add(n)
+				oldTotal.add(o)
+				//hd := statistics.HammingDistance(values)
+				//if _, err := w.WriteString(fmt.Sprintf("NEW(%.8f)--  ", hd) + n.String()); err != nil {
+				//	t.Fatal(err)
+				//}
+				//if _, err := w.WriteString(fmt.Sprintf("OLD(%.8f)--  ", hd) + o.String() + "\n"); err != nil {
+				//	t.Fatal(err)
+				//
+				//}
+				//if err := w.Flush(); err != nil {
+				//	t.Fatal(err)
+				//}
+			}
+			if _, err := w.WriteString(fmt.Sprintf("total%d_%d:\n", i, j)); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := w.WriteString("NEW--  " + newTotal.String()); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := w.WriteString("OLD--  " + oldTotal.String()); err != nil {
+				t.Fatal(err)
+			}
+			t.Logf("NEW--  " + newTotal.String())
+			t.Logf("OLD--  " + oldTotal.String())
+			w.Flush()
+		}
+
+	}
+
 }
 
 type Res struct {
@@ -341,7 +409,7 @@ func readFloat64File(file string, length uint) ([]float64, error) {
 	return dst, nil
 }
 
-func readAllFloat64File(file string) ([]float64, error) {
+func ReadAllFloat64File(file string) ([]float64, error) {
 	f, err := os.Open(file)
 	defer f.Close()
 	if err != nil {
@@ -356,7 +424,7 @@ func readAllFloat64File(file string) ([]float64, error) {
 			if err == io.EOF {
 				return dst, nil
 			}
-			return nil, err
+			return dst, nil
 		} else {
 			dst = append(dst, num)
 			if err == io.EOF {
@@ -367,7 +435,7 @@ func readAllFloat64File(file string) ([]float64, error) {
 	return dst, nil
 }
 
-func readFileName(file string, length uint) ([]string, error) {
+func ReadFileName(file string, length uint) ([]string, error) {
 	f, err := os.Open(file)
 	defer f.Close()
 	if err != nil {

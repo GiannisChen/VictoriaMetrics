@@ -39,15 +39,20 @@ const (
 	// MarshalTypeNearestDelta is used instead of MarshalTypeZSTDNearestDelta
 	// if compression doesn't help.
 	MarshalTypeNearestDelta = MarshalType(6)
-
-	MarshalTypeSwitching = MarshalType(7)
-
-	MarshalTypeZSTD = MarshalType(8)
+	MarshalTypeSwitching    = MarshalType(7)
+	MarshalTypeZSTD         = MarshalType(8)
+	MarshalTypeDeltaXorZSTD = MarshalType(9)
+	MarshalTypeGorillaZ     = MarshalType(10)
+	MarshalTypeDeltaSnappy  = MarshalType(11)
+	MarshalTypeDeltaBrotli  = MarshalType(12)
+	MarshalTypeDeltaLZ4     = MarshalType(13)
+	MarshalTypeDelta2Snappy = MarshalType(17)
+	MarshalTypeDelta2Brotli = MarshalType(18)
+	MarshalTypeDelta2LZ4    = MarshalType(19)
 
 	// Self-Adaptive Compression
 	MarshalConst      = MarshalType(17)
 	MarshalDeltaZstd  = MarshalType(19)
-	MarshalXorZstd    = MarshalType(20)
 	MarshalDelta2Zstd = MarshalType(21)
 	MarshalDelta      = MarshalType(22)
 	MarshalDelta2     = MarshalType(23)

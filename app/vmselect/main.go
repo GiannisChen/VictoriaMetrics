@@ -439,6 +439,14 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) bool {
 		}
 		w.WriteHeader(http.StatusNoContent)
 		return true
+	case "/api/v1/sql":
+		vmsqlRequests.Inc()
+		if err := prometheus.ExportHandler(startTime, w, r); err != nil {
+			vmsqlErrors.Inc()
+			httpserver.Errorf(w, r, "%s", err)
+			return true
+		}
+		return true
 	default:
 		return false
 	}
@@ -548,6 +556,9 @@ var (
 
 	graphiteTagsDelSeriesRequests = metrics.NewCounter(`vm_http_requests_total{path="/tags/delSeries"}`)
 	graphiteTagsDelSeriesErrors   = metrics.NewCounter(`vm_http_request_errors_total{path="/tags/delSeries"}`)
+
+	vmsqlRequests = metrics.NewCounter(`vm_http_requests_total{path="/vmsql"}`)
+	vmsqlErrors   = metrics.NewCounter(`vm_http_request_errors_total{path="/vmsql"}`)
 
 	graphiteFunctionsRequests = metrics.NewCounter(`vm_http_request_total{path="/functions"}`)
 

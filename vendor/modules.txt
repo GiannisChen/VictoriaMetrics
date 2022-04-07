@@ -100,6 +100,9 @@ github.com/cheggaaa/pb/v3/termutil
 # github.com/cpuguy83/go-md2man/v2 v2.0.1
 ## explicit; go 1.11
 github.com/cpuguy83/go-md2man/v2/md2man
+# github.com/davecgh/go-spew v1.1.1
+## explicit
+github.com/davecgh/go-spew/spew
 # github.com/fatih/color v1.13.0
 ## explicit; go 1.13
 github.com/fatih/color
@@ -167,8 +170,8 @@ github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.13
 ## explicit; go 1.9
 github.com/mattn/go-runewidth
-# github.com/matttproud/golang_protobuf_extensions v1.0.1
-## explicit
+# github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369
+## explicit; go 1.9
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/oklog/ulid v1.3.1
 ## explicit
@@ -176,6 +179,9 @@ github.com/oklog/ulid
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+## explicit
+github.com/pmezard/go-difflib/difflib
 # github.com/prometheus/client_golang v1.12.1
 ## explicit; go 1.13
 github.com/prometheus/client_golang/prometheus
@@ -216,6 +222,10 @@ github.com/rivo/uniseg
 # github.com/russross/blackfriday/v2 v2.1.0
 ## explicit
 github.com/russross/blackfriday/v2
+# github.com/stretchr/testify v1.7.0
+## explicit; go 1.13
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
 # github.com/urfave/cli/v2 v2.3.0
 ## explicit; go 1.11
 github.com/urfave/cli/v2
@@ -448,3 +458,14 @@ google.golang.org/protobuf/types/known/timestamppb
 gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 ## explicit
+gopkg.in/yaml.v3
+# vitess.io/vitess v0.13.0
+## explicit; go 1.17
+vitess.io/vitess/go/bytes2
+vitess.io/vitess/go/hack
+vitess.io/vitess/go/sqltypes
+vitess.io/vitess/go/vt/proto/query
+vitess.io/vitess/go/vt/proto/topodata
+vitess.io/vitess/go/vt/proto/vtrpc
+vitess.io/vitess/go/vt/proto/vttime
+vitess.io/vitess/go/vt/vterrors

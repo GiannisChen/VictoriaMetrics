@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/VictoriaMetrics/VictoriaMetrics/app/vmsql"
 	"net/http"
 	"os"
 	"time"
@@ -99,6 +100,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) bool {
 			{"api/v1/status/tsdb", "tsdb status page"},
 			{"api/v1/status/top_queries", "top queries"},
 			{"api/v1/status/active_queries", "active queries"},
+			{"api/v1/sql", "SQL supported time-series engine"},
 		})
 		return true
 	}
@@ -109,6 +111,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) bool {
 		return true
 	}
 	if vmstorage.RequestHandler(w, r) {
+		return true
+	}
+	if vmsql.RequestHandler(w, r) {
 		return true
 	}
 	return false

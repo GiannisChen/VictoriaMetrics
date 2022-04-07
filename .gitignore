@@ -20,4 +20,4 @@
 Gemfile.lock
 /_site
 _site
-/app/vmselect/vmsql/test/
+/app/vmsql/test/

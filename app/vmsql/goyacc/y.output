@@ -1,0 +1,2144 @@
+
+state 0
+	$accept: .start_command $end 
+
+	CREATE  shift 9
+	INSERT  shift 10
+	DELETE  shift 12
+	DROP  shift 11
+	SELECT  shift 13
+	DESCRIBE  shift 14
+	.  error
+
+	command  goto 2
+	create_statement  goto 3
+	insert_statement  goto 4
+	drop_statement  goto 5
+	delete_statement  goto 6
+	select_statement  goto 7
+	describe_statement  goto 8
+	start_command  goto 1
+
+state 1
+	$accept:  start_command.$end 
+
+	$end  accept
+	.  error
+
+
+state 2
+	start_command:  command.semicolon_opt 
+	semicolon_opt: .    (2)
+
+	';'  shift 16
+	.  reduce 2 (src line 110)
+
+	semicolon_opt  goto 15
+
+state 3
+	command:  create_statement.    (4)
+
+	.  reduce 4 (src line 114)
+
+
+state 4
+	command:  insert_statement.    (5)
+
+	.  reduce 5 (src line 116)
+
+
+state 5
+	command:  drop_statement.    (6)
+
+	.  reduce 6 (src line 117)
+
+
+state 6
+	command:  delete_statement.    (7)
+
+	.  reduce 7 (src line 118)
+
+
+state 7
+	command:  select_statement.    (8)
+
+	.  reduce 8 (src line 119)
+
+
+state 8
+	command:  describe_statement.    (9)
+
+	.  reduce 9 (src line 120)
+
+
+state 9
+	create_statement:  CREATE.TABLE sql_id '(' table_column_list ')' 
+	create_statement:  CREATE.TABLE IF NOT EXISTS sql_id '(' table_column_list ')' 
+
+	TABLE  shift 17
+	.  error
+
+
+state 10
+	insert_statement:  INSERT.INTO sql_id VALUES insert_data 
+	insert_statement:  INSERT.INTO sql_id '*' VALUES insert_data 
+	insert_statement:  INSERT.INTO sql_id '(' sql_id_columns ')' VALUES insert_data 
+
+	INTO  shift 18
+	.  error
+
+
+state 11
+	drop_statement:  DROP.TABLE sql_id 
+
+	TABLE  shift 19
+	.  error
+
+
+state 12
+	delete_statement:  DELETE.FROM sql_id 
+	delete_statement:  DELETE.'*' FROM sql_id 
+	delete_statement:  DELETE.FROM sql_id WHERE delete_where_expression 
+
+	'*'  shift 21
+	FROM  shift 20
+	.  error
+
+
+state 13
+	select_statement:  SELECT.'*' FROM sql_id select_where_expressions group_by_expression order_by_expression limit_expression 
+	select_statement:  SELECT.select_item_list FROM sql_id select_where_expressions group_by_expression order_by_expression limit_expression 
+
+	'*'  shift 22
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 25
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+	select_item_list  goto 23
+	select_item  goto 24
+
+state 14
+	describe_statement:  DESCRIBE.TABLE sql_id 
+
+	TABLE  shift 38
+	.  error
+
+
+state 15
+	start_command:  command semicolon_opt.    (1)
+
+	.  reduce 1 (src line 107)
+
+
+state 16
+	semicolon_opt:  ';'.    (3)
+
+	.  reduce 3 (src line 112)
+
+
+state 17
+	create_statement:  CREATE TABLE.sql_id '(' table_column_list ')' 
+	create_statement:  CREATE TABLE.IF NOT EXISTS sql_id '(' table_column_list ')' 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	IF  shift 40
+	.  error
+
+	sql_id  goto 39
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 18
+	insert_statement:  INSERT INTO.sql_id VALUES insert_data 
+	insert_statement:  INSERT INTO.sql_id '*' VALUES insert_data 
+	insert_statement:  INSERT INTO.sql_id '(' sql_id_columns ')' VALUES insert_data 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 41
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 19
+	drop_statement:  DROP TABLE.sql_id 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 42
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 20
+	delete_statement:  DELETE FROM.sql_id 
+	delete_statement:  DELETE FROM.sql_id WHERE delete_where_expression 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 43
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 21
+	delete_statement:  DELETE '*'.FROM sql_id 
+
+	FROM  shift 44
+	.  error
+
+
+state 22
+	select_statement:  SELECT '*'.FROM sql_id select_where_expressions group_by_expression order_by_expression limit_expression 
+
+	FROM  shift 45
+	.  error
+
+
+state 23
+	select_statement:  SELECT select_item_list.FROM sql_id select_where_expressions group_by_expression order_by_expression limit_expression 
+	select_item_list:  select_item_list.',' select_item 
+
+	','  shift 47
+	FROM  shift 46
+	.  error
+
+
+state 24
+	select_item_list:  select_item.    (79)
+
+	.  reduce 79 (src line 278)
+
+
+state 25
+	select_item:  sql_id.'(' select_item ')' 
+	select_item:  sql_id.'(' select_item ',' num_literal ')' 
+	select_item:  sql_id.    (83)
+
+	'('  shift 48
+	.  reduce 83 (src line 287)
+
+
+state 26
+	sql_id:  id_or_var.    (43)
+
+	.  reduce 43 (src line 196)
+
+
+state 27
+	sql_id:  non_reserved_keyword.    (44)
+
+	.  reduce 44 (src line 198)
+
+
+state 28
+	id_or_var:  ID.    (45)
+
+	.  reduce 45 (src line 200)
+
+
+state 29
+	non_reserved_keyword:  BOOL.    (46)
+
+	.  reduce 46 (src line 203)
+
+
+state 30
+	non_reserved_keyword:  BOOLEAN.    (47)
+
+	.  reduce 47 (src line 205)
+
+
+state 31
+	non_reserved_keyword:  DOUBLE.    (48)
+
+	.  reduce 48 (src line 206)
+
+
+state 32
+	non_reserved_keyword:  STRING_NUM.    (49)
+
+	.  reduce 49 (src line 207)
+
+
+state 33
+	non_reserved_keyword:  INTEGER_NUM.    (50)
+
+	.  reduce 50 (src line 208)
+
+
+state 34
+	non_reserved_keyword:  FLOAT_NUM.    (51)
+
+	.  reduce 51 (src line 209)
+
+
+state 35
+	non_reserved_keyword:  DECIMAL_NUM.    (52)
+
+	.  reduce 52 (src line 210)
+
+
+state 36
+	non_reserved_keyword:  TRUE_NUM.    (53)
+
+	.  reduce 53 (src line 211)
+
+
+state 37
+	non_reserved_keyword:  FALSE_NUM.    (54)
+
+	.  reduce 54 (src line 212)
+
+
+state 38
+	describe_statement:  DESCRIBE TABLE.sql_id 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 49
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 39
+	create_statement:  CREATE TABLE sql_id.'(' table_column_list ')' 
+
+	'('  shift 50
+	.  error
+
+
+state 40
+	create_statement:  CREATE TABLE IF.NOT EXISTS sql_id '(' table_column_list ')' 
+
+	NOT  shift 51
+	.  error
+
+
+state 41
+	insert_statement:  INSERT INTO sql_id.VALUES insert_data 
+	insert_statement:  INSERT INTO sql_id.'*' VALUES insert_data 
+	insert_statement:  INSERT INTO sql_id.'(' sql_id_columns ')' VALUES insert_data 
+
+	'('  shift 54
+	'*'  shift 53
+	VALUES  shift 52
+	.  error
+
+
+state 42
+	drop_statement:  DROP TABLE sql_id.    (64)
+
+	.  reduce 64 (src line 231)
+
+
+state 43
+	delete_statement:  DELETE FROM sql_id.    (65)
+	delete_statement:  DELETE FROM sql_id.WHERE delete_where_expression 
+
+	WHERE  shift 55
+	.  reduce 65 (src line 234)
+
+
+state 44
+	delete_statement:  DELETE '*' FROM.sql_id 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 56
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 45
+	select_statement:  SELECT '*' FROM.sql_id select_where_expressions group_by_expression order_by_expression limit_expression 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 57
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 46
+	select_statement:  SELECT select_item_list FROM.sql_id select_where_expressions group_by_expression order_by_expression limit_expression 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 58
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 47
+	select_item_list:  select_item_list ','.select_item 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 25
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+	select_item  goto 59
+
+state 48
+	select_item:  sql_id '('.select_item ')' 
+	select_item:  sql_id '('.select_item ',' num_literal ')' 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 25
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+	select_item  goto 60
+
+state 49
+	describe_statement:  DESCRIBE TABLE sql_id.    (113)
+
+	.  reduce 113 (src line 341)
+
+
+state 50
+	create_statement:  CREATE TABLE sql_id '('.table_column_list ')' 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	table_column_list  goto 61
+	column_definition  goto 62
+	sql_id  goto 63
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 51
+	create_statement:  CREATE TABLE IF NOT.EXISTS sql_id '(' table_column_list ')' 
+
+	EXISTS  shift 64
+	.  error
+
+
+state 52
+	insert_statement:  INSERT INTO sql_id VALUES.insert_data 
+
+	'('  shift 66
+	.  error
+
+	insert_data  goto 65
+
+state 53
+	insert_statement:  INSERT INTO sql_id '*'.VALUES insert_data 
+
+	VALUES  shift 67
+	.  error
+
+
+state 54
+	insert_statement:  INSERT INTO sql_id '('.sql_id_columns ')' VALUES insert_data 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id_columns  goto 68
+	sql_id  goto 69
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 55
+	delete_statement:  DELETE FROM sql_id WHERE.delete_where_expression 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	delete_where_expression  goto 70
+	delete_where_item  goto 71
+	sql_id  goto 72
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 56
+	delete_statement:  DELETE '*' FROM sql_id.    (66)
+
+	.  reduce 66 (src line 236)
+
+
+state 57
+	select_statement:  SELECT '*' FROM sql_id.select_where_expressions group_by_expression order_by_expression limit_expression 
+	select_where_expressions: .    (93)
+
+	WHERE  shift 74
+	.  reduce 93 (src line 304)
+
+	select_where_expressions  goto 73
+
+state 58
+	select_statement:  SELECT select_item_list FROM sql_id.select_where_expressions group_by_expression order_by_expression limit_expression 
+	select_where_expressions: .    (93)
+
+	WHERE  shift 74
+	.  reduce 93 (src line 304)
+
+	select_where_expressions  goto 75
+
+state 59
+	select_item_list:  select_item_list ',' select_item.    (80)
+
+	.  reduce 80 (src line 280)
+
+
+state 60
+	select_item:  sql_id '(' select_item.')' 
+	select_item:  sql_id '(' select_item.',' num_literal ')' 
+
+	','  shift 77
+	')'  shift 76
+	.  error
+
+
+state 61
+	create_statement:  CREATE TABLE sql_id '(' table_column_list.')' 
+	table_column_list:  table_column_list.',' column_definition 
+
+	','  shift 79
+	')'  shift 78
+	.  error
+
+
+state 62
+	table_column_list:  column_definition.    (12)
+
+	.  reduce 12 (src line 135)
+
+
+state 63
+	column_definition:  sql_id.column_type TAG 
+	column_definition:  sql_id.column_type TAG NOT NULL 
+	column_definition:  sql_id.column_type TAG DEFAULT literal 
+	column_definition:  sql_id.column_type VALUE 
+	column_definition:  sql_id.column_type VALUE NOT NULL 
+	column_definition:  sql_id.column_type VALUE DEFAULT literal 
+
+	BOOL  shift 82
+	STRING  shift 96
+	FLOAT  shift 95
+	DOUBLE  shift 94
+	BOOLEAN  shift 83
+	BIT  shift 81
+	TINYINT  shift 84
+	SMALLINT  shift 85
+	INT  shift 86
+	INTEGER  shift 87
+	BIGINT  shift 88
+	UTINYINT  shift 89
+	USMALLINT  shift 90
+	UINT  shift 91
+	UBIGINT  shift 92
+	REAL  shift 93
+	.  error
+
+	column_type  goto 80
+
+state 64
+	create_statement:  CREATE TABLE IF NOT EXISTS.sql_id '(' table_column_list ')' 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 97
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 65
+	insert_statement:  INSERT INTO sql_id VALUES insert_data.    (55)
+	insert_data:  insert_data.',' '(' literal_list ')' 
+
+	','  shift 98
+	.  reduce 55 (src line 214)
+
+
+state 66
+	insert_data:  '('.literal_list ')' 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal_list  goto 99
+	literal  goto 100
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 67
+	insert_statement:  INSERT INTO sql_id '*' VALUES.insert_data 
+
+	'('  shift 66
+	.  error
+
+	insert_data  goto 108
+
+state 68
+	insert_statement:  INSERT INTO sql_id '(' sql_id_columns.')' VALUES insert_data 
+	sql_id_columns:  sql_id_columns.',' sql_id 
+
+	','  shift 110
+	')'  shift 109
+	.  error
+
+
+state 69
+	sql_id_columns:  sql_id.    (58)
+
+	.  reduce 58 (src line 219)
+
+
+state 70
+	delete_statement:  DELETE FROM sql_id WHERE delete_where_expression.    (67)
+	delete_where_expression:  delete_where_expression.AND delete_where_item 
+	delete_where_expression:  delete_where_expression.OR delete_where_item 
+
+	OR  shift 112
+	AND  shift 111
+	.  reduce 67 (src line 237)
+
+
+state 71
+	delete_where_expression:  delete_where_item.    (68)
+
+	.  reduce 68 (src line 239)
+
+
+state 72
+	delete_where_item:  sql_id.IN '(' literal_list ')' 
+	delete_where_item:  sql_id.NOT IN '(' literal_list ')' 
+	delete_where_item:  sql_id.'=' literal 
+	delete_where_item:  sql_id.NE literal 
+	delete_where_item:  sql_id.LIKE string_literal 
+	delete_where_item:  sql_id.NOT LIKE string_literal 
+
+	NOT  shift 114
+	'='  shift 115
+	NE  shift 116
+	LIKE  shift 117
+	IN  shift 113
+	.  error
+
+
+state 73
+	select_statement:  SELECT '*' FROM sql_id select_where_expressions.group_by_expression order_by_expression limit_expression 
+	group_by_expression: .    (90)
+
+	GROUP  shift 119
+	.  reduce 90 (src line 299)
+
+	group_by_expression  goto 118
+
+state 74
+	select_where_expressions:  WHERE.select_where_expression 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 123
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+	select_where_expression  goto 120
+	select_where_time_expression  goto 121
+	select_where_other_expression  goto 122
+
+state 75
+	select_statement:  SELECT select_item_list FROM sql_id select_where_expressions.group_by_expression order_by_expression limit_expression 
+	group_by_expression: .    (90)
+
+	GROUP  shift 119
+	.  reduce 90 (src line 299)
+
+	group_by_expression  goto 124
+
+state 76
+	select_item:  sql_id '(' select_item ')'.    (81)
+
+	.  reduce 81 (src line 282)
+
+
+state 77
+	select_item:  sql_id '(' select_item ','.num_literal ')' 
+
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	num_literal  goto 125
+
+state 78
+	create_statement:  CREATE TABLE sql_id '(' table_column_list ')'.    (10)
+
+	.  reduce 10 (src line 122)
+
+
+state 79
+	table_column_list:  table_column_list ','.column_definition 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	column_definition  goto 126
+	sql_id  goto 63
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 80
+	column_definition:  sql_id column_type.TAG 
+	column_definition:  sql_id column_type.TAG NOT NULL 
+	column_definition:  sql_id column_type.TAG DEFAULT literal 
+	column_definition:  sql_id column_type.VALUE 
+	column_definition:  sql_id column_type.VALUE NOT NULL 
+	column_definition:  sql_id column_type.VALUE DEFAULT literal 
+
+	TAG  shift 127
+	VALUE  shift 128
+	.  error
+
+
+state 81
+	column_type:  BIT.    (20)
+
+	.  reduce 20 (src line 165)
+
+
+state 82
+	column_type:  BOOL.    (21)
+
+	.  reduce 21 (src line 167)
+
+
+state 83
+	column_type:  BOOLEAN.    (22)
+
+	.  reduce 22 (src line 168)
+
+
+state 84
+	column_type:  TINYINT.    (23)
+
+	.  reduce 23 (src line 169)
+
+
+state 85
+	column_type:  SMALLINT.    (24)
+
+	.  reduce 24 (src line 170)
+
+
+state 86
+	column_type:  INT.    (25)
+
+	.  reduce 25 (src line 171)
+
+
+state 87
+	column_type:  INTEGER.    (26)
+
+	.  reduce 26 (src line 172)
+
+
+state 88
+	column_type:  BIGINT.    (27)
+
+	.  reduce 27 (src line 173)
+
+
+state 89
+	column_type:  UTINYINT.    (28)
+
+	.  reduce 28 (src line 174)
+
+
+state 90
+	column_type:  USMALLINT.    (29)
+
+	.  reduce 29 (src line 175)
+
+
+state 91
+	column_type:  UINT.    (30)
+
+	.  reduce 30 (src line 176)
+
+
+state 92
+	column_type:  UBIGINT.    (31)
+
+	.  reduce 31 (src line 177)
+
+
+state 93
+	column_type:  REAL.    (32)
+
+	.  reduce 32 (src line 178)
+
+
+state 94
+	column_type:  DOUBLE.    (33)
+
+	.  reduce 33 (src line 179)
+
+
+state 95
+	column_type:  FLOAT.    (34)
+
+	.  reduce 34 (src line 180)
+
+
+state 96
+	column_type:  STRING.    (35)
+
+	.  reduce 35 (src line 181)
+
+
+state 97
+	create_statement:  CREATE TABLE IF NOT EXISTS sql_id.'(' table_column_list ')' 
+
+	'('  shift 129
+	.  error
+
+
+state 98
+	insert_data:  insert_data ','.'(' literal_list ')' 
+
+	'('  shift 130
+	.  error
+
+
+state 99
+	insert_data:  '(' literal_list.')' 
+	literal_list:  literal_list.',' literal 
+
+	','  shift 132
+	')'  shift 131
+	.  error
+
+
+state 100
+	literal_list:  literal.    (62)
+
+	.  reduce 62 (src line 227)
+
+
+state 101
+	literal:  string_literal.    (36)
+
+	.  reduce 36 (src line 183)
+
+
+state 102
+	literal:  num_literal.    (37)
+
+	.  reduce 37 (src line 185)
+
+
+state 103
+	string_literal:  STRING_NUM.    (38)
+
+	.  reduce 38 (src line 187)
+
+
+state 104
+	num_literal:  INTEGER_NUM.    (39)
+
+	.  reduce 39 (src line 190)
+
+
+state 105
+	num_literal:  FLOAT_NUM.    (40)
+
+	.  reduce 40 (src line 192)
+
+
+state 106
+	num_literal:  TRUE_NUM.    (41)
+
+	.  reduce 41 (src line 193)
+
+
+state 107
+	num_literal:  FALSE_NUM.    (42)
+
+	.  reduce 42 (src line 194)
+
+
+state 108
+	insert_statement:  INSERT INTO sql_id '*' VALUES insert_data.    (56)
+	insert_data:  insert_data.',' '(' literal_list ')' 
+
+	','  shift 98
+	.  reduce 56 (src line 216)
+
+
+state 109
+	insert_statement:  INSERT INTO sql_id '(' sql_id_columns ')'.VALUES insert_data 
+
+	VALUES  shift 133
+	.  error
+
+
+state 110
+	sql_id_columns:  sql_id_columns ','.sql_id 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 134
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 111
+	delete_where_expression:  delete_where_expression AND.delete_where_item 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	delete_where_item  goto 135
+	sql_id  goto 72
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 112
+	delete_where_expression:  delete_where_expression OR.delete_where_item 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	delete_where_item  goto 136
+	sql_id  goto 72
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 113
+	delete_where_item:  sql_id IN.'(' literal_list ')' 
+
+	'('  shift 137
+	.  error
+
+
+state 114
+	delete_where_item:  sql_id NOT.IN '(' literal_list ')' 
+	delete_where_item:  sql_id NOT.LIKE string_literal 
+
+	LIKE  shift 139
+	IN  shift 138
+	.  error
+
+
+state 115
+	delete_where_item:  sql_id '='.literal 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal  goto 140
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 116
+	delete_where_item:  sql_id NE.literal 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal  goto 141
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 117
+	delete_where_item:  sql_id LIKE.string_literal 
+
+	STRING_NUM  shift 103
+	.  error
+
+	string_literal  goto 142
+
+state 118
+	select_statement:  SELECT '*' FROM sql_id select_where_expressions group_by_expression.order_by_expression limit_expression 
+	order_by_expression: .    (86)
+
+	ORDER  shift 144
+	.  reduce 86 (src line 293)
+
+	order_by_expression  goto 143
+
+state 119
+	group_by_expression:  GROUP.BY sql_id_columns 
+	group_by_expression:  GROUP.BY '(' sql_id_columns ')' 
+
+	BY  shift 145
+	.  error
+
+
+state 120
+	select_where_expressions:  WHERE select_where_expression.    (94)
+	select_where_expression:  select_where_expression.AND select_where_other_expression 
+	select_where_expression:  select_where_expression.OR select_where_other_expression 
+
+	OR  shift 147
+	AND  shift 146
+	.  reduce 94 (src line 306)
+
+
+state 121
+	select_where_expression:  select_where_time_expression.    (95)
+
+	.  reduce 95 (src line 308)
+
+
+state 122
+	select_where_expression:  select_where_other_expression.    (96)
+
+	.  reduce 96 (src line 310)
+
+
+state 123
+	select_where_other_expression:  sql_id.IN '(' literal_list ')' 
+	select_where_other_expression:  sql_id.NOT IN '(' literal_list ')' 
+	select_where_other_expression:  sql_id.'=' literal 
+	select_where_other_expression:  sql_id.'<' literal 
+	select_where_other_expression:  sql_id.'>' literal 
+	select_where_other_expression:  sql_id.LE literal 
+	select_where_other_expression:  sql_id.GE literal 
+	select_where_other_expression:  sql_id.NE literal 
+	select_where_other_expression:  sql_id.LIKE string_literal 
+	select_where_other_expression:  sql_id.NOT LIKE string_literal 
+	select_where_time_expression:  sql_id.IN '[' time_select_list ']' 
+
+	NOT  shift 149
+	'='  shift 150
+	'<'  shift 151
+	'>'  shift 152
+	LE  shift 153
+	GE  shift 154
+	NE  shift 155
+	LIKE  shift 156
+	IN  shift 148
+	.  error
+
+
+state 124
+	select_statement:  SELECT select_item_list FROM sql_id select_where_expressions group_by_expression.order_by_expression limit_expression 
+	order_by_expression: .    (86)
+
+	ORDER  shift 144
+	.  reduce 86 (src line 293)
+
+	order_by_expression  goto 157
+
+state 125
+	select_item:  sql_id '(' select_item ',' num_literal.')' 
+
+	')'  shift 158
+	.  error
+
+
+state 126
+	table_column_list:  table_column_list ',' column_definition.    (13)
+
+	.  reduce 13 (src line 137)
+
+
+state 127
+	column_definition:  sql_id column_type TAG.    (14)
+	column_definition:  sql_id column_type TAG.NOT NULL 
+	column_definition:  sql_id column_type TAG.DEFAULT literal 
+
+	NOT  shift 159
+	DEFAULT  shift 160
+	.  reduce 14 (src line 139)
+
+
+state 128
+	column_definition:  sql_id column_type VALUE.    (17)
+	column_definition:  sql_id column_type VALUE.NOT NULL 
+	column_definition:  sql_id column_type VALUE.DEFAULT literal 
+
+	NOT  shift 161
+	DEFAULT  shift 162
+	.  reduce 17 (src line 152)
+
+
+state 129
+	create_statement:  CREATE TABLE IF NOT EXISTS sql_id '('.table_column_list ')' 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	table_column_list  goto 163
+	column_definition  goto 62
+	sql_id  goto 63
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 130
+	insert_data:  insert_data ',' '('.literal_list ')' 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal_list  goto 164
+	literal  goto 100
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 131
+	insert_data:  '(' literal_list ')'.    (60)
+
+	.  reduce 60 (src line 223)
+
+
+state 132
+	literal_list:  literal_list ','.literal 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal  goto 165
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 133
+	insert_statement:  INSERT INTO sql_id '(' sql_id_columns ')' VALUES.insert_data 
+
+	'('  shift 66
+	.  error
+
+	insert_data  goto 166
+
+state 134
+	sql_id_columns:  sql_id_columns ',' sql_id.    (59)
+
+	.  reduce 59 (src line 221)
+
+
+state 135
+	delete_where_expression:  delete_where_expression AND delete_where_item.    (69)
+
+	.  reduce 69 (src line 241)
+
+
+state 136
+	delete_where_expression:  delete_where_expression OR delete_where_item.    (70)
+
+	.  reduce 70 (src line 242)
+
+
+state 137
+	delete_where_item:  sql_id IN '('.literal_list ')' 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal_list  goto 167
+	literal  goto 100
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 138
+	delete_where_item:  sql_id NOT IN.'(' literal_list ')' 
+
+	'('  shift 168
+	.  error
+
+
+state 139
+	delete_where_item:  sql_id NOT LIKE.string_literal 
+
+	STRING_NUM  shift 103
+	.  error
+
+	string_literal  goto 169
+
+state 140
+	delete_where_item:  sql_id '=' literal.    (73)
+
+	.  reduce 73 (src line 247)
+
+
+state 141
+	delete_where_item:  sql_id NE literal.    (74)
+
+	.  reduce 74 (src line 248)
+
+
+state 142
+	delete_where_item:  sql_id LIKE string_literal.    (75)
+
+	.  reduce 75 (src line 249)
+
+
+state 143
+	select_statement:  SELECT '*' FROM sql_id select_where_expressions group_by_expression order_by_expression.limit_expression 
+	limit_expression: .    (84)
+
+	LIMIT  shift 171
+	.  reduce 84 (src line 289)
+
+	limit_expression  goto 170
+
+state 144
+	order_by_expression:  ORDER.BY '(' sql_id_columns ')' 
+	order_by_expression:  ORDER.BY '(' sql_id_columns ')' DESC 
+	order_by_expression:  ORDER.BY '(' sql_id_columns ')' ASC 
+
+	BY  shift 172
+	.  error
+
+
+state 145
+	group_by_expression:  GROUP BY.sql_id_columns 
+	group_by_expression:  GROUP BY.'(' sql_id_columns ')' 
+
+	'('  shift 174
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id_columns  goto 173
+	sql_id  goto 69
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 146
+	select_where_expression:  select_where_expression AND.select_where_other_expression 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 176
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+	select_where_other_expression  goto 175
+
+state 147
+	select_where_expression:  select_where_expression OR.select_where_other_expression 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id  goto 176
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+	select_where_other_expression  goto 177
+
+state 148
+	select_where_other_expression:  sql_id IN.'(' literal_list ')' 
+	select_where_time_expression:  sql_id IN.'[' time_select_list ']' 
+
+	'('  shift 178
+	'['  shift 179
+	.  error
+
+
+state 149
+	select_where_other_expression:  sql_id NOT.IN '(' literal_list ')' 
+	select_where_other_expression:  sql_id NOT.LIKE string_literal 
+
+	LIKE  shift 181
+	IN  shift 180
+	.  error
+
+
+state 150
+	select_where_other_expression:  sql_id '='.literal 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal  goto 182
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 151
+	select_where_other_expression:  sql_id '<'.literal 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal  goto 183
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 152
+	select_where_other_expression:  sql_id '>'.literal 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal  goto 184
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 153
+	select_where_other_expression:  sql_id LE.literal 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal  goto 185
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 154
+	select_where_other_expression:  sql_id GE.literal 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal  goto 186
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 155
+	select_where_other_expression:  sql_id NE.literal 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal  goto 187
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 156
+	select_where_other_expression:  sql_id LIKE.string_literal 
+
+	STRING_NUM  shift 103
+	.  error
+
+	string_literal  goto 188
+
+state 157
+	select_statement:  SELECT select_item_list FROM sql_id select_where_expressions group_by_expression order_by_expression.limit_expression 
+	limit_expression: .    (84)
+
+	LIMIT  shift 171
+	.  reduce 84 (src line 289)
+
+	limit_expression  goto 189
+
+state 158
+	select_item:  sql_id '(' select_item ',' num_literal ')'.    (82)
+
+	.  reduce 82 (src line 285)
+
+
+state 159
+	column_definition:  sql_id column_type TAG NOT.NULL 
+
+	NULL  shift 190
+	.  error
+
+
+state 160
+	column_definition:  sql_id column_type TAG DEFAULT.literal 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal  goto 191
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 161
+	column_definition:  sql_id column_type VALUE NOT.NULL 
+
+	NULL  shift 192
+	.  error
+
+
+state 162
+	column_definition:  sql_id column_type VALUE DEFAULT.literal 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal  goto 193
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 163
+	create_statement:  CREATE TABLE IF NOT EXISTS sql_id '(' table_column_list.')' 
+	table_column_list:  table_column_list.',' column_definition 
+
+	','  shift 79
+	')'  shift 194
+	.  error
+
+
+state 164
+	insert_data:  insert_data ',' '(' literal_list.')' 
+	literal_list:  literal_list.',' literal 
+
+	','  shift 132
+	')'  shift 195
+	.  error
+
+
+state 165
+	literal_list:  literal_list ',' literal.    (63)
+
+	.  reduce 63 (src line 229)
+
+
+state 166
+	insert_statement:  INSERT INTO sql_id '(' sql_id_columns ')' VALUES insert_data.    (57)
+	insert_data:  insert_data.',' '(' literal_list ')' 
+
+	','  shift 98
+	.  reduce 57 (src line 217)
+
+
+state 167
+	literal_list:  literal_list.',' literal 
+	delete_where_item:  sql_id IN '(' literal_list.')' 
+
+	','  shift 132
+	')'  shift 196
+	.  error
+
+
+state 168
+	delete_where_item:  sql_id NOT IN '('.literal_list ')' 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal_list  goto 197
+	literal  goto 100
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 169
+	delete_where_item:  sql_id NOT LIKE string_literal.    (76)
+
+	.  reduce 76 (src line 250)
+
+
+state 170
+	select_statement:  SELECT '*' FROM sql_id select_where_expressions group_by_expression order_by_expression limit_expression.    (77)
+
+	.  reduce 77 (src line 252)
+
+
+state 171
+	limit_expression:  LIMIT.INTEGER_NUM 
+
+	INTEGER_NUM  shift 198
+	.  error
+
+
+state 172
+	order_by_expression:  ORDER BY.'(' sql_id_columns ')' 
+	order_by_expression:  ORDER BY.'(' sql_id_columns ')' DESC 
+	order_by_expression:  ORDER BY.'(' sql_id_columns ')' ASC 
+
+	'('  shift 199
+	.  error
+
+
+state 173
+	sql_id_columns:  sql_id_columns.',' sql_id 
+	group_by_expression:  GROUP BY sql_id_columns.    (91)
+
+	','  shift 110
+	.  reduce 91 (src line 301)
+
+
+state 174
+	group_by_expression:  GROUP BY '('.sql_id_columns ')' 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id_columns  goto 200
+	sql_id  goto 69
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 175
+	select_where_expression:  select_where_expression AND select_where_other_expression.    (97)
+
+	.  reduce 97 (src line 311)
+
+
+state 176
+	select_where_other_expression:  sql_id.IN '(' literal_list ')' 
+	select_where_other_expression:  sql_id.NOT IN '(' literal_list ')' 
+	select_where_other_expression:  sql_id.'=' literal 
+	select_where_other_expression:  sql_id.'<' literal 
+	select_where_other_expression:  sql_id.'>' literal 
+	select_where_other_expression:  sql_id.LE literal 
+	select_where_other_expression:  sql_id.GE literal 
+	select_where_other_expression:  sql_id.NE literal 
+	select_where_other_expression:  sql_id.LIKE string_literal 
+	select_where_other_expression:  sql_id.NOT LIKE string_literal 
+
+	NOT  shift 149
+	'='  shift 150
+	'<'  shift 151
+	'>'  shift 152
+	LE  shift 153
+	GE  shift 154
+	NE  shift 155
+	LIKE  shift 156
+	IN  shift 201
+	.  error
+
+
+state 177
+	select_where_expression:  select_where_expression OR select_where_other_expression.    (98)
+
+	.  reduce 98 (src line 312)
+
+
+state 178
+	select_where_other_expression:  sql_id IN '('.literal_list ')' 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal_list  goto 202
+	literal  goto 100
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 179
+	select_where_time_expression:  sql_id IN '['.time_select_list ']' 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	num_literal  goto 205
+	string_literal  goto 204
+	time_select_list  goto 203
+
+state 180
+	select_where_other_expression:  sql_id NOT IN.'(' literal_list ')' 
+
+	'('  shift 206
+	.  error
+
+
+state 181
+	select_where_other_expression:  sql_id NOT LIKE.string_literal 
+
+	STRING_NUM  shift 103
+	.  error
+
+	string_literal  goto 207
+
+state 182
+	select_where_other_expression:  sql_id '=' literal.    (101)
+
+	.  reduce 101 (src line 317)
+
+
+state 183
+	select_where_other_expression:  sql_id '<' literal.    (102)
+
+	.  reduce 102 (src line 318)
+
+
+state 184
+	select_where_other_expression:  sql_id '>' literal.    (103)
+
+	.  reduce 103 (src line 319)
+
+
+state 185
+	select_where_other_expression:  sql_id LE literal.    (104)
+
+	.  reduce 104 (src line 320)
+
+
+state 186
+	select_where_other_expression:  sql_id GE literal.    (105)
+
+	.  reduce 105 (src line 321)
+
+
+state 187
+	select_where_other_expression:  sql_id NE literal.    (106)
+
+	.  reduce 106 (src line 322)
+
+
+state 188
+	select_where_other_expression:  sql_id LIKE string_literal.    (107)
+
+	.  reduce 107 (src line 323)
+
+
+state 189
+	select_statement:  SELECT select_item_list FROM sql_id select_where_expressions group_by_expression order_by_expression limit_expression.    (78)
+
+	.  reduce 78 (src line 265)
+
+
+state 190
+	column_definition:  sql_id column_type TAG NOT NULL.    (15)
+
+	.  reduce 15 (src line 144)
+
+
+state 191
+	column_definition:  sql_id column_type TAG DEFAULT literal.    (16)
+
+	.  reduce 16 (src line 148)
+
+
+state 192
+	column_definition:  sql_id column_type VALUE NOT NULL.    (18)
+
+	.  reduce 18 (src line 156)
+
+
+state 193
+	column_definition:  sql_id column_type VALUE DEFAULT literal.    (19)
+
+	.  reduce 19 (src line 160)
+
+
+state 194
+	create_statement:  CREATE TABLE IF NOT EXISTS sql_id '(' table_column_list ')'.    (11)
+
+	.  reduce 11 (src line 128)
+
+
+state 195
+	insert_data:  insert_data ',' '(' literal_list ')'.    (61)
+
+	.  reduce 61 (src line 225)
+
+
+state 196
+	delete_where_item:  sql_id IN '(' literal_list ')'.    (71)
+
+	.  reduce 71 (src line 244)
+
+
+state 197
+	literal_list:  literal_list.',' literal 
+	delete_where_item:  sql_id NOT IN '(' literal_list.')' 
+
+	','  shift 132
+	')'  shift 208
+	.  error
+
+
+state 198
+	limit_expression:  LIMIT INTEGER_NUM.    (85)
+
+	.  reduce 85 (src line 291)
+
+
+state 199
+	order_by_expression:  ORDER BY '('.sql_id_columns ')' 
+	order_by_expression:  ORDER BY '('.sql_id_columns ')' DESC 
+	order_by_expression:  ORDER BY '('.sql_id_columns ')' ASC 
+
+	BOOL  shift 29
+	DOUBLE  shift 31
+	BOOLEAN  shift 30
+	STRING_NUM  shift 32
+	INTEGER_NUM  shift 33
+	FLOAT_NUM  shift 34
+	DECIMAL_NUM  shift 35
+	TRUE_NUM  shift 36
+	FALSE_NUM  shift 37
+	ID  shift 28
+	.  error
+
+	sql_id_columns  goto 209
+	sql_id  goto 69
+	non_reserved_keyword  goto 27
+	id_or_var  goto 26
+
+state 200
+	sql_id_columns:  sql_id_columns.',' sql_id 
+	group_by_expression:  GROUP BY '(' sql_id_columns.')' 
+
+	','  shift 110
+	')'  shift 210
+	.  error
+
+
+state 201
+	select_where_other_expression:  sql_id IN.'(' literal_list ')' 
+
+	'('  shift 178
+	.  error
+
+
+state 202
+	literal_list:  literal_list.',' literal 
+	select_where_other_expression:  sql_id IN '(' literal_list.')' 
+
+	','  shift 132
+	')'  shift 211
+	.  error
+
+
+state 203
+	select_where_time_expression:  sql_id IN '[' time_select_list.']' 
+
+	']'  shift 212
+	.  error
+
+
+state 204
+	time_select_list:  string_literal.    (110)
+
+	.  reduce 110 (src line 336)
+
+
+state 205
+	time_select_list:  num_literal.':' num_literal 
+	time_select_list:  num_literal.':' num_literal ':' num_literal 
+
+	':'  shift 213
+	.  error
+
+
+state 206
+	select_where_other_expression:  sql_id NOT IN '('.literal_list ')' 
+
+	STRING_NUM  shift 103
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	literal_list  goto 214
+	literal  goto 100
+	num_literal  goto 102
+	string_literal  goto 101
+
+state 207
+	select_where_other_expression:  sql_id NOT LIKE string_literal.    (108)
+
+	.  reduce 108 (src line 324)
+
+
+state 208
+	delete_where_item:  sql_id NOT IN '(' literal_list ')'.    (72)
+
+	.  reduce 72 (src line 246)
+
+
+state 209
+	sql_id_columns:  sql_id_columns.',' sql_id 
+	order_by_expression:  ORDER BY '(' sql_id_columns.')' 
+	order_by_expression:  ORDER BY '(' sql_id_columns.')' DESC 
+	order_by_expression:  ORDER BY '(' sql_id_columns.')' ASC 
+
+	','  shift 110
+	')'  shift 215
+	.  error
+
+
+state 210
+	group_by_expression:  GROUP BY '(' sql_id_columns ')'.    (92)
+
+	.  reduce 92 (src line 302)
+
+
+state 211
+	select_where_other_expression:  sql_id IN '(' literal_list ')'.    (99)
+
+	.  reduce 99 (src line 314)
+
+
+state 212
+	select_where_time_expression:  sql_id IN '[' time_select_list ']'.    (109)
+
+	.  reduce 109 (src line 326)
+
+
+state 213
+	time_select_list:  num_literal ':'.num_literal 
+	time_select_list:  num_literal ':'.num_literal ':' num_literal 
+
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	num_literal  goto 216
+
+state 214
+	literal_list:  literal_list.',' literal 
+	select_where_other_expression:  sql_id NOT IN '(' literal_list.')' 
+
+	','  shift 132
+	')'  shift 217
+	.  error
+
+
+state 215
+	order_by_expression:  ORDER BY '(' sql_id_columns ')'.    (87)
+	order_by_expression:  ORDER BY '(' sql_id_columns ')'.DESC 
+	order_by_expression:  ORDER BY '(' sql_id_columns ')'.ASC 
+
+	DESC  shift 218
+	ASC  shift 219
+	.  reduce 87 (src line 295)
+
+
+state 216
+	time_select_list:  num_literal ':' num_literal.    (111)
+	time_select_list:  num_literal ':' num_literal.':' num_literal 
+
+	':'  shift 220
+	.  reduce 111 (src line 338)
+
+
+state 217
+	select_where_other_expression:  sql_id NOT IN '(' literal_list ')'.    (100)
+
+	.  reduce 100 (src line 316)
+
+
+state 218
+	order_by_expression:  ORDER BY '(' sql_id_columns ')' DESC.    (88)
+
+	.  reduce 88 (src line 296)
+
+
+state 219
+	order_by_expression:  ORDER BY '(' sql_id_columns ')' ASC.    (89)
+
+	.  reduce 89 (src line 297)
+
+
+state 220
+	time_select_list:  num_literal ':' num_literal ':'.num_literal 
+
+	INTEGER_NUM  shift 104
+	FLOAT_NUM  shift 105
+	TRUE_NUM  shift 106
+	FALSE_NUM  shift 107
+	.  error
+
+	num_literal  goto 221
+
+state 221
+	time_select_list:  num_literal ':' num_literal ':' num_literal.    (112)
+
+	.  reduce 112 (src line 339)
+
+
+106 terminals, 34 nonterminals
+114 grammar rules, 222/16000 states
+0 shift/reduce, 0 reduce/reduce conflicts reported
+83 working sets used
+memory: parser 201/240000
+29 extra closures
+508 shift entries, 1 exceptions
+97 goto entries
+91 entries saved by goto default
+Optimizer space used: output 286/240000
+286 table entries, 5 zero
+maximum spread: 106, maximum offset: 220

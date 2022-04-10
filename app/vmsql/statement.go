@@ -46,8 +46,9 @@ type (
 	}
 )
 
-func (c *CreateStatement) Type() string { return "CREATE" }
-func (i *InsertStatement) Type() string { return "INSERT" }
-func (d *DropStatement) Type() string   { return "DROP" }
-func (d *DeleteStatement) Type() string { return "DELETE" }
-func (s *SelectStatement) Type() string { return "SELECT" }
+func (c *CreateStatement) Type() string   { return "CREATE" }
+func (i *InsertStatement) Type() string   { return "INSERT" }
+func (d *DropStatement) Type() string     { return "DROP" }
+func (d *DeleteStatement) Type() string   { return "DELETE" }
+func (s *SelectStatement) Type() string   { return "SELECT" }
+func (s *DescribeStatement) Type() string { return "DESCRIBE" }

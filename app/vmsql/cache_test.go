@@ -1,6 +1,7 @@
 package vmsql
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -129,5 +130,8 @@ func TestLoadAndClose(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	Init("./test")
+	tablePath := "./test"
+	LoadTableCacheFromFileOrNew(tablePath)
+	fmt.Println(TableCacheV)
+	MustCloseCache(tablePath)
 }

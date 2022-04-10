@@ -67,8 +67,8 @@ func bindVariable(yylex yyLexer, bvar string) {
 %left <str> '*' '/' DIV '%' MOD
 %left <str> '^'
 %right <str> '~' UNARY
-%token <str> CREATE INSERT INTO VALUES DELETE DROP FROM WHERE SELECT LIMIT ORDER BY GROUP DESC ASC ':' '[' ']'
-%type <statement> command create_statement insert_statemnet drop_statement delete_statement select_statement
+%token <str> CREATE INSERT INTO VALUES DELETE DROP FROM WHERE SELECT LIMIT ORDER BY GROUP DESC ASC ':' '[' ']' DESCRIBE
+%type <statement> command create_statement insert_statement drop_statement delete_statement select_statement describe_statement
 %type <deleteFilters> delete_where_expression
 %type <tagFilter> delete_where_item
 %type <tuples> insert_data
@@ -113,10 +113,11 @@ semicolon_opt:
 
 command:
 	create_statement { $$ = $1 }
-	| insert_statemnet { $$ = $1 }
+	| insert_statement { $$ = $1 }
 	| drop_statement { $$ = $1 }
 	| delete_statement { $$ = $1 }
 	| select_statement { $$ = $1 }
+	| describe_statement { $$ = $1 }
 
 create_statement:
 	CREATE TABLE sql_id '(' table_column_list ')'
@@ -210,7 +211,7 @@ non_reserved_keyword:
 	| TRUE_NUM
 	| FALSE_NUM
 
-insert_statemnet:
+insert_statement:
 	INSERT INTO sql_id VALUES insert_data { $$ = &InsertStatement{IsStar: true, Columns: nil, TableName: $3, InsertData: $5} }
 	| INSERT INTO sql_id '*' VALUES insert_data { $$ = &InsertStatement{IsStar: true, Columns: nil, TableName: $3, InsertData: $6} }
 	| INSERT INTO sql_id '(' sql_id_columns ')' VALUES insert_data { $$ = &InsertStatement{IsStar: false, Columns: $5, TableName: $3, InsertData: $8} }
@@ -335,4 +336,7 @@ select_where_time_expression:
 time_select_list:
 	string_literal { $$ = &TimeFilter{Start: "", End: "", Step: $1} }
 	| num_literal ':' num_literal {$$ = &TimeFilter{Start: $1, End: $3, Step: ""} }
-	| num_literal ':' num_literal ':' string_literal {$$ = &TimeFilter{Start: $1, End: $3, Step: $5} }
+	| num_literal ':' num_literal ':' num_literal {$$ = &TimeFilter{Start: $1, End: $3, Step: $5} }
+
+describe_statement:
+    	DESCRIBE TABLE sql_id { $$ = &DescribeStatement{TableName: $3} }

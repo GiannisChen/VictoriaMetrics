@@ -228,7 +228,7 @@ func TestSplitStatementIsSpace(t *testing.T) {
 		t.Run(testcase.sql, func(t *testing.T) {
 			sql, rem, err := SplitStatement(testcase.sql)
 			t.Log(sql)
-			if err == nil && (len(rem) == 0 || len(strings.TrimSpace(sql)) == 0) {
+			if err == nil && (len(rem) == 0 || len(strings.TrimSpace(rem)) == 0) {
 				if !testcase.is {
 					t.Error("should T but got F")
 				}

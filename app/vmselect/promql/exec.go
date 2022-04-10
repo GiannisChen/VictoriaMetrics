@@ -32,16 +32,16 @@ func Exec(ec *EvalConfig, q string, isFirstPointOnly bool) ([]netstorage.Result,
 		defer querystats.RegisterQuery(q, ec.End-ec.Start, startTime)
 	}
 
-	ec.validate()
+	ec.Validate()
 
-	e, err := parsePromQLWithCache(q)
+	e, err := ParsePromQLWithCache(q)
 	if err != nil {
 		return nil, err
 	}
 
-	qid := activeQueriesV.Add(ec, q)
-	rv, err := evalExpr(ec, e)
-	activeQueriesV.Remove(qid)
+	qid := ActiveQueriesV.Add(ec, q)
+	rv, err := EvalExpr(ec, e)
+	ActiveQueriesV.Remove(qid)
 	if err != nil {
 		return nil, err
 	}
@@ -54,8 +54,8 @@ func Exec(ec *EvalConfig, q string, isFirstPointOnly bool) ([]netstorage.Result,
 		}
 	}
 
-	maySort := maySortResults(e, rv)
-	result, err := timeseriesToResult(rv, maySort)
+	maySort := MaySortResults(e, rv)
+	result, err := TimeseriesToResult(rv, maySort)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func Exec(ec *EvalConfig, q string, isFirstPointOnly bool) ([]netstorage.Result,
 	return result, err
 }
 
-func maySortResults(e metricsql.Expr, tss []*timeseries) bool {
+func MaySortResults(e metricsql.Expr, tss []*timeseries) bool {
 	switch v := e.(type) {
 	case *metricsql.FuncExpr:
 		switch strings.ToLower(v.Name) {
@@ -89,7 +89,7 @@ func maySortResults(e metricsql.Expr, tss []*timeseries) bool {
 	return true
 }
 
-func timeseriesToResult(tss []*timeseries, maySort bool) ([]netstorage.Result, error) {
+func TimeseriesToResult(tss []*timeseries, maySort bool) ([]netstorage.Result, error) {
 	tss = removeNaNs(tss)
 	result := make([]netstorage.Result, len(tss))
 	m := make(map[string]struct{}, len(tss))
@@ -219,7 +219,7 @@ func getReverseCmpOp(op string) string {
 	}
 }
 
-func parsePromQLWithCache(q string) (metricsql.Expr, error) {
+func ParsePromQLWithCache(q string) (metricsql.Expr, error) {
 	pcv := parseCacheV.Get(q)
 	if pcv == nil {
 		e, err := metricsql.Parse(q)

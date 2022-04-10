@@ -129,7 +129,7 @@ func newEvalConfig(src *EvalConfig) *EvalConfig {
 	return &ec
 }
 
-func (ec *EvalConfig) validate() {
+func (ec *EvalConfig) Validate() {
 	if ec.Start > ec.End {
 		logger.Panicf("BUG: start cannot exceed end; got %d vs %d", ec.Start, ec.End)
 	}
@@ -185,7 +185,7 @@ func getTimestamps(start, end, step int64) []int64 {
 	return timestamps
 }
 
-func evalExpr(ec *EvalConfig, e metricsql.Expr) ([]*timeseries, error) {
+func EvalExpr(ec *EvalConfig, e metricsql.Expr) ([]*timeseries, error) {
 	if me, ok := e.(*metricsql.MetricExpr); ok {
 		re := &metricsql.RollupExpr{
 			Expr: me,
@@ -348,7 +348,7 @@ func execBinaryOpArgs(ec *EvalConfig, exprFirst, exprSecond metricsql.Expr, be *
 	//
 	// - Queries, which get additional labels from `info` metrics.
 	//   See https://www.robustperception.io/exposing-the-software-version-to-prometheus
-	tssFirst, err := evalExpr(ec, exprFirst)
+	tssFirst, err := EvalExpr(ec, exprFirst)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -361,7 +361,7 @@ func execBinaryOpArgs(ec *EvalConfig, exprFirst, exprSecond metricsql.Expr, be *
 		lfs = metricsql.TrimFiltersByGroupModifier(lfs, be)
 		exprSecond = metricsql.PushdownBinaryOpFilters(exprSecond, lfs)
 	}
-	tssSecond, err := evalExpr(ec, exprSecond)
+	tssSecond, err := EvalExpr(ec, exprSecond)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -501,7 +501,7 @@ func tryGetArgRollupFuncWithMetricExpr(ae *metricsql.AggrFuncExpr) (*metricsql.F
 func evalExprs(ec *EvalConfig, es []metricsql.Expr) ([][]*timeseries, error) {
 	var rvs [][]*timeseries
 	for _, e := range es {
-		rv, err := evalExpr(ec, e)
+		rv, err := EvalExpr(ec, e)
 		if err != nil {
 			return nil, err
 		}
@@ -523,7 +523,7 @@ func evalRollupFuncArgs(ec *EvalConfig, fe *metricsql.FuncExpr) ([]interface{}, 
 			args[i] = re
 			continue
 		}
-		ts, err := evalExpr(ec, arg)
+		ts, err := EvalExpr(ec, arg)
 		if err != nil {
 			return nil, nil, fmt.Errorf("cannot evaluate arg #%d for %q: %w", i+1, fe.AppendString(nil), err)
 		}
@@ -567,7 +567,7 @@ func evalRollupFunc(ec *EvalConfig, funcName string, rf rollupFunc, expr metrics
 	if re.At == nil {
 		return evalRollupFuncWithoutAt(ec, funcName, rf, expr, re, iafc)
 	}
-	tssAt, err := evalExpr(ec, re.At)
+	tssAt, err := EvalExpr(ec, re.At)
 	if err != nil {
 		return nil, fmt.Errorf("cannot evaluate `@` modifier: %w", err)
 	}
@@ -688,7 +688,7 @@ func evalRollupFuncWithSubquery(ec *EvalConfig, funcName string, rf rollupFunc, 
 	}
 	// unconditionally align start and end args to step for subquery as Prometheus does.
 	ecSQ.Start, ecSQ.End = alignStartEnd(ecSQ.Start, ecSQ.End, ecSQ.Step)
-	tssSQ, err := evalExpr(ecSQ, re.Expr)
+	tssSQ, err := EvalExpr(ecSQ, re.Expr)
 	if err != nil {
 		return nil, err
 	}

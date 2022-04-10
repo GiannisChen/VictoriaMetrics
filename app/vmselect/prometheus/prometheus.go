@@ -30,17 +30,17 @@ import (
 )
 
 var (
-	latencyOffset = flag.Duration("search.latencyOffset", time.Second*30, "The time when data points become visible in query results after the collection. "+
+	LatencyOffset = flag.Duration("search.latencyOffset", time.Second*30, "The time when data points become visible in query results after the collection. "+
 		"Too small value can result in incomplete last points for query results")
-	maxQueryLen = flagutil.NewBytes("search.maxQueryLen", 16*1024, "The maximum search query length in bytes")
-	maxLookback = flag.Duration("search.maxLookback", 0, "Synonym to -search.lookback-delta from Prometheus. "+
+	MaxQueryLen = flagutil.NewBytes("search.maxQueryLen", 16*1024, "The maximum search query length in bytes")
+	MaxLookback = flag.Duration("search.maxLookback", 0, "Synonym to -search.lookback-delta from Prometheus. "+
 		"The value is dynamically detected from interval between time series datapoints if not set. It can be overridden on per-query basis via max_lookback arg. "+
 		"See also '-search.maxStalenessInterval' flag, which has the same meaining due to historical reasons")
-	maxStalenessInterval = flag.Duration("search.maxStalenessInterval", 0, "The maximum interval for staleness calculations. "+
+	MaxStalenessInterval = flag.Duration("search.maxStalenessInterval", 0, "The maximum interval for staleness calculations. "+
 		"By default it is automatically calculated from the median interval between samples. This flag could be useful for tuning "+
 		"Prometheus data model closer to Influx-style data model. See https://prometheus.io/docs/prometheus/latest/querying/basics/#staleness for details. "+
 		"See also '-search.maxLookback' flag, which has the same meaning due to historical reasons")
-	maxStepForPointsAdjustment = flag.Duration("search.maxStepForPointsAdjustment", time.Minute, "The maximum step when /api/v1/query_range handler adjusts "+
+	MaxStepForPointsAdjustment = flag.Duration("search.maxStepForPointsAdjustment", time.Minute, "The maximum step when /api/v1/query_range handler adjusts "+
 		"points with timestamps closer than -search.latencyOffset to the current time. The adjustment is needed because such points may contain incomplete data")
 )
 
@@ -1025,8 +1025,8 @@ func QueryHandler(startTime time.Time, w http.ResponseWriter, r *http.Request) e
 	}
 	deadline := searchutils.GetDeadlineForQuery(r, startTime)
 
-	if len(query) > maxQueryLen.N {
-		return fmt.Errorf("too long query; got %d bytes; mustn't exceed `-search.maxQueryLen=%d` bytes", len(query), maxQueryLen.N)
+	if len(query) > MaxQueryLen.N {
+		return fmt.Errorf("too long query; got %d bytes; mustn't exceed `-search.maxQueryLen=%d` bytes", len(query), MaxQueryLen.N)
 	}
 	etfs, err := searchutils.GetExtraTagFilters(r)
 	if err != nil {
@@ -1153,8 +1153,8 @@ func queryRangeHandler(startTime time.Time, w http.ResponseWriter, query string,
 	}
 
 	// Validate input args.
-	if len(query) > maxQueryLen.N {
-		return fmt.Errorf("too long query; got %d bytes; mustn't exceed `-search.maxQueryLen=%d` bytes", len(query), maxQueryLen.N)
+	if len(query) > MaxQueryLen.N {
+		return fmt.Errorf("too long query; got %d bytes; mustn't exceed `-search.maxQueryLen=%d` bytes", len(query), MaxQueryLen.N)
 	}
 	if start > end {
 		end = start + defaultStep
@@ -1181,16 +1181,16 @@ func queryRangeHandler(startTime time.Time, w http.ResponseWriter, query string,
 	if err != nil {
 		return fmt.Errorf("cannot execute query: %w", err)
 	}
-	if step < maxStepForPointsAdjustment.Milliseconds() {
+	if step < MaxStepForPointsAdjustment.Milliseconds() {
 		queryOffset := getLatencyOffsetMilliseconds()
 		if ct-queryOffset < end {
-			result = adjustLastPoints(result, ct-queryOffset, ct+step)
+			result = AdjustLastPoints(result, ct-queryOffset, ct+step)
 		}
 	}
 
 	// Remove NaN values as Prometheus does.
 	// See https://github.com/VictoriaMetrics/VictoriaMetrics/issues/153
-	result = removeEmptyValuesAndTimeseries(result)
+	result = RemoveEmptyValuesAndTimeseries(result)
 
 	w.Header().Set("Content-Type", "application/json")
 	bw := bufferedwriter.Get(w)
@@ -1202,7 +1202,7 @@ func queryRangeHandler(startTime time.Time, w http.ResponseWriter, query string,
 	return nil
 }
 
-func removeEmptyValuesAndTimeseries(tss []netstorage.Result) []netstorage.Result {
+func RemoveEmptyValuesAndTimeseries(tss []netstorage.Result) []netstorage.Result {
 	dst := tss[:0]
 	for i := range tss {
 		ts := &tss[i]
@@ -1245,9 +1245,9 @@ var queryRangeDuration = metrics.NewSummary(`vm_request_duration_seconds{path="/
 
 var nan = math.NaN()
 
-// adjustLastPoints substitutes the last point values on the time range (start..end]
+// AdjustLastPoints substitutes the last point values on the time range (start..end]
 // with the previous point values, since these points may contain incomplete values.
-func adjustLastPoints(tss []netstorage.Result, start, end int64) []netstorage.Result {
+func AdjustLastPoints(tss []netstorage.Result, start, end int64) []netstorage.Result {
 	for i := range tss {
 		ts := &tss[i]
 		values := ts.Values
@@ -1276,9 +1276,9 @@ func adjustLastPoints(tss []netstorage.Result, start, end int64) []netstorage.Re
 }
 
 func getMaxLookback(r *http.Request) (int64, error) {
-	d := maxLookback.Milliseconds()
+	d := MaxLookback.Milliseconds()
 	if d == 0 {
-		d = maxStalenessInterval.Milliseconds()
+		d = MaxStalenessInterval.Milliseconds()
 	}
 	return searchutils.GetDuration(r, "max_lookback", d)
 }
@@ -1332,7 +1332,7 @@ func getRoundDigits(r *http.Request) int {
 }
 
 func getLatencyOffsetMilliseconds() int64 {
-	d := latencyOffset.Milliseconds()
+	d := LatencyOffset.Milliseconds()
 	if d <= 1000 {
 		d = 1000
 	}

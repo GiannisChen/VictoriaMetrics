@@ -56,6 +56,7 @@ func main() {
 	vmstorage.Init(promql.ResetRollupResultCacheIfNeeded)
 	vmselect.Init()
 	vminsert.Init()
+	vmsql.Init()
 	startSelfScraper()
 
 	go httpserver.Serve(*httpListenAddr, requestHandler)
@@ -76,6 +77,7 @@ func main() {
 
 	vmstorage.Stop()
 	vmselect.Stop()
+	vmsql.Stop()
 
 	fs.MustStopDirRemover()
 

@@ -31,6 +31,10 @@ type (
 		Filters   *DeleteFilter
 	}
 
+	DescribeStatement struct {
+		TableName string
+	}
+
 	SelectStatement struct {
 		TableName   string
 		IsStar      bool

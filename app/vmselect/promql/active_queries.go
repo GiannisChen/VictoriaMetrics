@@ -13,7 +13,7 @@ import (
 //
 // The written active queries are sorted in descending order of their exeuction duration.
 func WriteActiveQueries(w io.Writer) {
-	aqes := activeQueriesV.GetAll()
+	aqes := ActiveQueriesV.GetAll()
 	sort.Slice(aqes, func(i, j int) bool {
 		return aqes[i].startTime.Sub(aqes[j].startTime) < 0
 	})
@@ -25,7 +25,7 @@ func WriteActiveQueries(w io.Writer) {
 	}
 }
 
-var activeQueriesV = newActiveQueries()
+var ActiveQueriesV = newActiveQueries()
 
 type activeQueries struct {
 	mu sync.Mutex

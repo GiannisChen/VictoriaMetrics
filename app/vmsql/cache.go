@@ -69,12 +69,6 @@ func mustSave(w *filestream.Writer) error {
 
 var TableCacheV *TableCache
 
-func Init(tablePath string) {
-	LoadTableCacheFromFileOrNew(tablePath)
-	fmt.Println(TableCacheV)
-	MustCloseCache(tablePath)
-}
-
 func LoadTableCacheFromFileOrNew(tablePath string) {
 	TableCacheV = &TableCache{C: map[string]*Table{}, Size: 0}
 	TableCacheV.wg.Add(1)
@@ -105,6 +99,11 @@ func LoadTableCacheFromFileOrNew(tablePath string) {
 func AddTable(table *Table, tablePath string) error {
 	if table == nil {
 		return errors.New("want *Table by got nil")
+	}
+
+	table.ColMap = map[string]*Column{}
+	for _, column := range table.Columns {
+		table.ColMap[column.ColumnName] = column
 	}
 
 	TableCacheV.wg.Add(1)

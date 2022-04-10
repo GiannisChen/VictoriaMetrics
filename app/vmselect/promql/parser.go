@@ -8,7 +8,7 @@ import (
 //
 // It returns the wrapped query with the corresponding window, step and offset.
 func IsRollup(s string) (childQuery string, window, step, offset *metricsql.DurationExpr) {
-	expr, err := parsePromQLWithCache(s)
+	expr, err := ParsePromQLWithCache(s)
 	if err != nil {
 		return
 	}
@@ -25,7 +25,7 @@ func IsRollup(s string) (childQuery string, window, step, offset *metricsql.Dura
 //
 // It returns the wrapped query with the corresponding window with offset.
 func IsMetricSelectorWithRollup(s string) (childQuery string, window, offset *metricsql.DurationExpr) {
-	expr, err := parsePromQLWithCache(s)
+	expr, err := ParsePromQLWithCache(s)
 	if err != nil {
 		return
 	}

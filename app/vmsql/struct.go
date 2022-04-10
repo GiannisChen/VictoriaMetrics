@@ -280,7 +280,6 @@ func TransSelectStatement(stmt *SelectStatement, t *Table) (bool, metricsql.Expr
 			if _, ok := columnTagMap[stmt.Columns[0][0].Args[0]]; !ok && len(columnValueMap) != 0 {
 				return false, nil, errors.New(fmt.Sprintf("SELECT: %s does not exists in select columns", stmt.Columns[0][0].Args[0]))
 			}
-
 			return true, &metricsql.MetricExpr{LabelFilters: allLabelFilters}, nil
 		} else {
 			return false, nil, errors.New("SELECT: semantic error, multi TAGs select not supported")

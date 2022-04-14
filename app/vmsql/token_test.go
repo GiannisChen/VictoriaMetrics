@@ -393,6 +393,10 @@ func TestSmallPart(t *testing.T) {
 		in:  ":",
 		id:  ':',
 		out: ":",
+	}, {
+		in:  "'2022-01-01T03:00:00.999+07:00'",
+		id:  STRING_NUM,
+		out: "2022-01-01T03:00:00.999+07:00",
 	}}
 
 	for _, tcase := range testcases {

@@ -28,26 +28,26 @@ var (
 )
 
 //line app/vmselect/prometheus/export.qtpl:12
-func StreamExportCSVLine(qw422016 *qt422016.Writer, xb *exportBlock, fieldNames []string) {
+func StreamExportCSVLine(qw422016 *qt422016.Writer, xb *ExportBlock, fieldNames []string) {
 //line app/vmselect/prometheus/export.qtpl:13
-	if len(xb.timestamps) == 0 || len(fieldNames) == 0 {
+	if len(xb.Timestamps) == 0 || len(fieldNames) == 0 {
 //line app/vmselect/prometheus/export.qtpl:13
 		return
 //line app/vmselect/prometheus/export.qtpl:13
 	}
 //line app/vmselect/prometheus/export.qtpl:14
-	for i, timestamp := range xb.timestamps {
+	for i, timestamp := range xb.Timestamps {
 //line app/vmselect/prometheus/export.qtpl:15
-		value := xb.values[i]
+		value := xb.Values[i]
 
 //line app/vmselect/prometheus/export.qtpl:16
-		streamexportCSVField(qw422016, xb.mn, fieldNames[0], timestamp, value)
+		streamexportCSVField(qw422016, xb.Mn, fieldNames[0], timestamp, value)
 //line app/vmselect/prometheus/export.qtpl:17
 		for _, fieldName := range fieldNames[1:] {
 //line app/vmselect/prometheus/export.qtpl:17
 			qw422016.N().S(`,`)
 //line app/vmselect/prometheus/export.qtpl:19
-			streamexportCSVField(qw422016, xb.mn, fieldName, timestamp, value)
+			streamexportCSVField(qw422016, xb.Mn, fieldName, timestamp, value)
 //line app/vmselect/prometheus/export.qtpl:20
 		}
 //line app/vmselect/prometheus/export.qtpl:21
@@ -59,7 +59,7 @@ func StreamExportCSVLine(qw422016 *qt422016.Writer, xb *exportBlock, fieldNames 
 }
 
 //line app/vmselect/prometheus/export.qtpl:23
-func WriteExportCSVLine(qq422016 qtio422016.Writer, xb *exportBlock, fieldNames []string) {
+func WriteExportCSVLine(qq422016 qtio422016.Writer, xb *ExportBlock, fieldNames []string) {
 //line app/vmselect/prometheus/export.qtpl:23
 	qw422016 := qt422016.AcquireWriter(qq422016)
 //line app/vmselect/prometheus/export.qtpl:23
@@ -70,7 +70,7 @@ func WriteExportCSVLine(qq422016 qtio422016.Writer, xb *exportBlock, fieldNames 
 }
 
 //line app/vmselect/prometheus/export.qtpl:23
-func ExportCSVLine(xb *exportBlock, fieldNames []string) string {
+func ExportCSVLine(xb *ExportBlock, fieldNames []string) string {
 //line app/vmselect/prometheus/export.qtpl:23
 	qb422016 := qt422016.AcquireByteBuffer()
 //line app/vmselect/prometheus/export.qtpl:23
@@ -211,9 +211,9 @@ func exportCSVField(mn *storage.MetricName, fieldName string, timestamp int64, v
 }
 
 //line app/vmselect/prometheus/export.qtpl:81
-func StreamExportPrometheusLine(qw422016 *qt422016.Writer, xb *exportBlock) {
+func StreamExportPrometheusLine(qw422016 *qt422016.Writer, xb *ExportBlock) {
 //line app/vmselect/prometheus/export.qtpl:82
-	if len(xb.timestamps) == 0 {
+	if len(xb.Timestamps) == 0 {
 //line app/vmselect/prometheus/export.qtpl:82
 		return
 //line app/vmselect/prometheus/export.qtpl:82
@@ -222,16 +222,16 @@ func StreamExportPrometheusLine(qw422016 *qt422016.Writer, xb *exportBlock) {
 	bb := quicktemplate.AcquireByteBuffer()
 
 //line app/vmselect/prometheus/export.qtpl:84
-	writeprometheusMetricName(bb, xb.mn)
+	writeprometheusMetricName(bb, xb.Mn)
 
 //line app/vmselect/prometheus/export.qtpl:85
-	for i, ts := range xb.timestamps {
+	for i, ts := range xb.Timestamps {
 //line app/vmselect/prometheus/export.qtpl:86
 		qw422016.N().Z(bb.B)
 //line app/vmselect/prometheus/export.qtpl:86
 		qw422016.N().S(` `)
 //line app/vmselect/prometheus/export.qtpl:87
-		qw422016.N().F(xb.values[i])
+		qw422016.N().F(xb.Values[i])
 //line app/vmselect/prometheus/export.qtpl:87
 		qw422016.N().S(` `)
 //line app/vmselect/prometheus/export.qtpl:88
@@ -248,7 +248,7 @@ func StreamExportPrometheusLine(qw422016 *qt422016.Writer, xb *exportBlock) {
 }
 
 //line app/vmselect/prometheus/export.qtpl:91
-func WriteExportPrometheusLine(qq422016 qtio422016.Writer, xb *exportBlock) {
+func WriteExportPrometheusLine(qq422016 qtio422016.Writer, xb *ExportBlock) {
 //line app/vmselect/prometheus/export.qtpl:91
 	qw422016 := qt422016.AcquireWriter(qq422016)
 //line app/vmselect/prometheus/export.qtpl:91
@@ -259,7 +259,7 @@ func WriteExportPrometheusLine(qq422016 qtio422016.Writer, xb *exportBlock) {
 }
 
 //line app/vmselect/prometheus/export.qtpl:91
-func ExportPrometheusLine(xb *exportBlock) string {
+func ExportPrometheusLine(xb *ExportBlock) string {
 //line app/vmselect/prometheus/export.qtpl:91
 	qb422016 := qt422016.AcquireByteBuffer()
 //line app/vmselect/prometheus/export.qtpl:91
@@ -274,9 +274,9 @@ func ExportPrometheusLine(xb *exportBlock) string {
 }
 
 //line app/vmselect/prometheus/export.qtpl:93
-func StreamExportJSONLine(qw422016 *qt422016.Writer, xb *exportBlock) {
+func StreamExportJSONLine(qw422016 *qt422016.Writer, xb *ExportBlock) {
 //line app/vmselect/prometheus/export.qtpl:94
-	if len(xb.timestamps) == 0 {
+	if len(xb.Timestamps) == 0 {
 //line app/vmselect/prometheus/export.qtpl:94
 		return
 //line app/vmselect/prometheus/export.qtpl:94
@@ -284,13 +284,13 @@ func StreamExportJSONLine(qw422016 *qt422016.Writer, xb *exportBlock) {
 //line app/vmselect/prometheus/export.qtpl:94
 	qw422016.N().S(`{"metric":`)
 //line app/vmselect/prometheus/export.qtpl:96
-	streammetricNameObject(qw422016, xb.mn)
+	streammetricNameObject(qw422016, xb.Mn)
 //line app/vmselect/prometheus/export.qtpl:96
 	qw422016.N().S(`,"values":[`)
 //line app/vmselect/prometheus/export.qtpl:98
-	if len(xb.values) > 0 {
+	if len(xb.Values) > 0 {
 //line app/vmselect/prometheus/export.qtpl:99
-		values := xb.values
+		values := xb.Values
 
 //line app/vmselect/prometheus/export.qtpl:100
 		qw422016.N().F(values[0])
@@ -310,9 +310,9 @@ func StreamExportJSONLine(qw422016 *qt422016.Writer, xb *exportBlock) {
 //line app/vmselect/prometheus/export.qtpl:105
 	qw422016.N().S(`],"timestamps":[`)
 //line app/vmselect/prometheus/export.qtpl:108
-	if len(xb.timestamps) > 0 {
+	if len(xb.Timestamps) > 0 {
 //line app/vmselect/prometheus/export.qtpl:109
-		timestamps := xb.timestamps
+		timestamps := xb.Timestamps
 
 //line app/vmselect/prometheus/export.qtpl:110
 		qw422016.N().DL(timestamps[0])
@@ -338,7 +338,7 @@ func StreamExportJSONLine(qw422016 *qt422016.Writer, xb *exportBlock) {
 }
 
 //line app/vmselect/prometheus/export.qtpl:118
-func WriteExportJSONLine(qq422016 qtio422016.Writer, xb *exportBlock) {
+func WriteExportJSONLine(qq422016 qtio422016.Writer, xb *ExportBlock) {
 //line app/vmselect/prometheus/export.qtpl:118
 	qw422016 := qt422016.AcquireWriter(qq422016)
 //line app/vmselect/prometheus/export.qtpl:118
@@ -349,7 +349,7 @@ func WriteExportJSONLine(qq422016 qtio422016.Writer, xb *exportBlock) {
 }
 
 //line app/vmselect/prometheus/export.qtpl:118
-func ExportJSONLine(xb *exportBlock) string {
+func ExportJSONLine(xb *ExportBlock) string {
 //line app/vmselect/prometheus/export.qtpl:118
 	qb422016 := qt422016.AcquireByteBuffer()
 //line app/vmselect/prometheus/export.qtpl:118
@@ -364,22 +364,22 @@ func ExportJSONLine(xb *exportBlock) string {
 }
 
 //line app/vmselect/prometheus/export.qtpl:120
-func StreamExportPromAPILine(qw422016 *qt422016.Writer, xb *exportBlock) {
+func StreamExportPromAPILine(qw422016 *qt422016.Writer, xb *ExportBlock) {
 //line app/vmselect/prometheus/export.qtpl:120
 	qw422016.N().S(`{"metric":`)
 //line app/vmselect/prometheus/export.qtpl:122
-	streammetricNameObject(qw422016, xb.mn)
+	streammetricNameObject(qw422016, xb.Mn)
 //line app/vmselect/prometheus/export.qtpl:122
 	qw422016.N().S(`,"values":`)
 //line app/vmselect/prometheus/export.qtpl:123
-	streamvaluesWithTimestamps(qw422016, xb.values, xb.timestamps)
+	streamvaluesWithTimestamps(qw422016, xb.Values, xb.Timestamps)
 //line app/vmselect/prometheus/export.qtpl:123
 	qw422016.N().S(`}`)
 //line app/vmselect/prometheus/export.qtpl:125
 }
 
 //line app/vmselect/prometheus/export.qtpl:125
-func WriteExportPromAPILine(qq422016 qtio422016.Writer, xb *exportBlock) {
+func WriteExportPromAPILine(qq422016 qtio422016.Writer, xb *ExportBlock) {
 //line app/vmselect/prometheus/export.qtpl:125
 	qw422016 := qt422016.AcquireWriter(qq422016)
 //line app/vmselect/prometheus/export.qtpl:125
@@ -390,7 +390,7 @@ func WriteExportPromAPILine(qq422016 qtio422016.Writer, xb *exportBlock) {
 }
 
 //line app/vmselect/prometheus/export.qtpl:125
-func ExportPromAPILine(xb *exportBlock) string {
+func ExportPromAPILine(xb *ExportBlock) string {
 //line app/vmselect/prometheus/export.qtpl:125
 	qb422016 := qt422016.AcquireByteBuffer()
 //line app/vmselect/prometheus/export.qtpl:125

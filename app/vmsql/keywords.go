@@ -101,6 +101,7 @@ var keywords = []keyword{
 	{"group", GROUP},
 	{"desc", DESC},
 	{"asc", ASC},
+	{"describe", DESCRIBE},
 }
 
 // keywordStrings contains the reverse mapping of token to keyword strings

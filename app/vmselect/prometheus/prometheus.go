@@ -141,8 +141,8 @@ func ExportCSVHandler(startTime time.Time, w http.ResponseWriter, r *http.Reques
 	defer bufferedwriter.Put(bw)
 
 	resultsCh := make(chan *quicktemplate.ByteBuffer, cgroup.AvailableCPUs())
-	writeCSVLine := func(xb *exportBlock) {
-		if len(xb.timestamps) == 0 {
+	writeCSVLine := func(xb *ExportBlock) {
+		if len(xb.Timestamps) == 0 {
 			return
 		}
 		bb := quicktemplate.AcquireByteBuffer()
@@ -160,13 +160,13 @@ func ExportCSVHandler(startTime time.Time, w http.ResponseWriter, r *http.Reques
 				if err := bw.Error(); err != nil {
 					return err
 				}
-				xb := exportBlockPool.Get().(*exportBlock)
-				xb.mn = &rs.MetricName
-				xb.timestamps = rs.Timestamps
-				xb.values = rs.Values
+				xb := ExportBlockPool.Get().(*ExportBlock)
+				xb.Mn = &rs.MetricName
+				xb.Timestamps = rs.Timestamps
+				xb.Values = rs.Values
 				writeCSVLine(xb)
-				xb.reset()
-				exportBlockPool.Put(xb)
+				xb.Reset()
+				ExportBlockPool.Put(xb)
 				return nil
 			})
 			close(resultsCh)
@@ -181,12 +181,12 @@ func ExportCSVHandler(startTime time.Time, w http.ResponseWriter, r *http.Reques
 				if err := b.UnmarshalData(); err != nil {
 					return fmt.Errorf("cannot unmarshal block during export: %s", err)
 				}
-				xb := exportBlockPool.Get().(*exportBlock)
-				xb.mn = mn
-				xb.timestamps, xb.values = b.AppendRowsWithTimeRangeFilter(xb.timestamps[:0], xb.values[:0], tr)
+				xb := ExportBlockPool.Get().(*ExportBlock)
+				xb.Mn = mn
+				xb.Timestamps, xb.Values = b.AppendRowsWithTimeRangeFilter(xb.Timestamps[:0], xb.Values[:0], tr)
 				writeCSVLine(xb)
-				xb.reset()
-				exportBlockPool.Put(xb)
+				xb.Reset()
+				ExportBlockPool.Put(xb)
 				return nil
 			})
 			close(resultsCh)
@@ -326,7 +326,7 @@ var exportDuration = metrics.NewSummary(`vm_request_duration_seconds{path="/api/
 
 func exportHandler(w http.ResponseWriter, matches []string, etfs [][]storage.TagFilter, start, end int64, format string, maxRowsPerLine int, reduceMemUsage bool, deadline searchutils.Deadline) error {
 	writeResponseFunc := WriteExportStdResponse
-	writeLineFunc := func(xb *exportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
+	writeLineFunc := func(xb *ExportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
 		bb := quicktemplate.AcquireByteBuffer()
 		WriteExportJSONLine(bb, xb)
 		resultsCh <- bb
@@ -334,14 +334,14 @@ func exportHandler(w http.ResponseWriter, matches []string, etfs [][]storage.Tag
 	contentType := "application/stream+json; charset=utf-8"
 	if format == "prometheus" {
 		contentType = "text/plain; charset=utf-8"
-		writeLineFunc = func(xb *exportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
+		writeLineFunc = func(xb *ExportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
 			bb := quicktemplate.AcquireByteBuffer()
 			WriteExportPrometheusLine(bb, xb)
 			resultsCh <- bb
 		}
 	} else if format == "promapi" {
 		writeResponseFunc = WriteExportPromAPIResponse
-		writeLineFunc = func(xb *exportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
+		writeLineFunc = func(xb *ExportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
 			bb := quicktemplate.AcquireByteBuffer()
 			WriteExportPromAPILine(bb, xb)
 			resultsCh <- bb
@@ -349,9 +349,9 @@ func exportHandler(w http.ResponseWriter, matches []string, etfs [][]storage.Tag
 	}
 	if maxRowsPerLine > 0 {
 		writeLineFuncOrig := writeLineFunc
-		writeLineFunc = func(xb *exportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
-			valuesOrig := xb.values
-			timestampsOrig := xb.timestamps
+		writeLineFunc = func(xb *ExportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
+			valuesOrig := xb.Values
+			timestampsOrig := xb.Timestamps
 			values := valuesOrig
 			timestamps := timestampsOrig
 			for len(values) > 0 {
@@ -368,12 +368,12 @@ func exportHandler(w http.ResponseWriter, matches []string, etfs [][]storage.Tag
 					values = nil
 					timestamps = nil
 				}
-				xb.values = valuesChunk
-				xb.timestamps = timestampsChunk
+				xb.Values = valuesChunk
+				xb.Timestamps = timestampsChunk
 				writeLineFuncOrig(xb, resultsCh)
 			}
-			xb.values = valuesOrig
-			xb.timestamps = timestampsOrig
+			xb.Values = valuesOrig
+			xb.Timestamps = timestampsOrig
 		}
 	}
 
@@ -400,13 +400,13 @@ func exportHandler(w http.ResponseWriter, matches []string, etfs [][]storage.Tag
 				if err := bw.Error(); err != nil {
 					return err
 				}
-				xb := exportBlockPool.Get().(*exportBlock)
-				xb.mn = &rs.MetricName
-				xb.timestamps = rs.Timestamps
-				xb.values = rs.Values
+				xb := ExportBlockPool.Get().(*ExportBlock)
+				xb.Mn = &rs.MetricName
+				xb.Timestamps = rs.Timestamps
+				xb.Values = rs.Values
 				writeLineFunc(xb, resultsCh)
-				xb.reset()
-				exportBlockPool.Put(xb)
+				xb.Reset()
+				ExportBlockPool.Put(xb)
 				return nil
 			})
 			close(resultsCh)
@@ -421,14 +421,14 @@ func exportHandler(w http.ResponseWriter, matches []string, etfs [][]storage.Tag
 				if err := b.UnmarshalData(); err != nil {
 					return fmt.Errorf("cannot unmarshal block during export: %s", err)
 				}
-				xb := exportBlockPool.Get().(*exportBlock)
-				xb.mn = mn
-				xb.timestamps, xb.values = b.AppendRowsWithTimeRangeFilter(xb.timestamps[:0], xb.values[:0], tr)
-				if len(xb.timestamps) > 0 {
+				xb := ExportBlockPool.Get().(*ExportBlock)
+				xb.Mn = mn
+				xb.Timestamps, xb.Values = b.AppendRowsWithTimeRangeFilter(xb.Timestamps[:0], xb.Values[:0], tr)
+				if len(xb.Timestamps) > 0 {
 					writeLineFunc(xb, resultsCh)
 				}
-				xb.reset()
-				exportBlockPool.Put(xb)
+				xb.Reset()
+				ExportBlockPool.Put(xb)
 				return nil
 			})
 			close(resultsCh)
@@ -448,21 +448,21 @@ func exportHandler(w http.ResponseWriter, matches []string, etfs [][]storage.Tag
 	return nil
 }
 
-type exportBlock struct {
-	mn         *storage.MetricName
-	timestamps []int64
-	values     []float64
+type ExportBlock struct {
+	Mn         *storage.MetricName
+	Timestamps []int64
+	Values     []float64
 }
 
-func (xb *exportBlock) reset() {
-	xb.mn = nil
-	xb.timestamps = xb.timestamps[:0]
-	xb.values = xb.values[:0]
+func (xb *ExportBlock) Reset() {
+	xb.Mn = nil
+	xb.Timestamps = xb.Timestamps[:0]
+	xb.Values = xb.Values[:0]
 }
 
-var exportBlockPool = &sync.Pool{
+var ExportBlockPool = &sync.Pool{
 	New: func() interface{} {
-		return &exportBlock{}
+		return &ExportBlock{}
 	},
 }
 
@@ -556,7 +556,7 @@ func LabelValuesHandler(startTime time.Time, labelName string, w http.ResponseWr
 		if err != nil {
 			return err
 		}
-		labelValues, err = labelValuesWithMatches(labelName, matches, etfs, start, end, deadline)
+		labelValues, err = LabelValuesWithMatches(labelName, matches, etfs, start, end, deadline)
 		if err != nil {
 			return fmt.Errorf("cannot obtain label values for %q, match[]=%q, start=%d, end=%d: %w", labelName, matches, start, end, err)
 		}
@@ -572,7 +572,7 @@ func LabelValuesHandler(startTime time.Time, labelName string, w http.ResponseWr
 	return nil
 }
 
-func labelValuesWithMatches(labelName string, matches []string, etfs [][]storage.TagFilter, start, end int64, deadline searchutils.Deadline) ([]string, error) {
+func LabelValuesWithMatches(labelName string, matches []string, etfs [][]storage.TagFilter, start, end int64, deadline searchutils.Deadline) ([]string, error) {
 	tagFilterss, err := getTagFilterssFromMatches(matches)
 	if err != nil {
 		return nil, err

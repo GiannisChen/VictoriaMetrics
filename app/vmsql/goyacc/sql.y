@@ -334,9 +334,9 @@ select_where_time_expression:
 	}
 
 time_select_list:
-	string_literal { $$ = &TimeFilter{Start: "", End: "", Step: $1} }
-	| num_literal ':' num_literal {$$ = &TimeFilter{Start: $1, End: $3, Step: ""} }
-	| num_literal ':' num_literal ':' num_literal {$$ = &TimeFilter{Start: $1, End: $3, Step: $5} }
+	num_literal { $$ = &TimeFilter{Start: "", End: "", Step: $1} }
+	| string_literal ':' string_literal {$$ = &TimeFilter{Start: $1, End: $3, Step: ""} }
+	| string_literal ':' string_literal ':' num_literal {$$ = &TimeFilter{Start: $1, End: $3, Step: $5} }
 
 describe_statement:
     	DESCRIBE TABLE sql_id { $$ = &DescribeStatement{TableName: $3} }

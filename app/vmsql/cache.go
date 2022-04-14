@@ -183,7 +183,7 @@ func FindTable(tableName, tablePath string) (*Table, error) {
 
 	table, err := LoadTableFromDisk(tableName, tablePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s not exists", tableName)
 	}
 
 	TableCacheV.wg.Add(1)

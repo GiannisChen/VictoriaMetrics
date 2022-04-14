@@ -18,6 +18,18 @@ type Table struct {
 	ColMap    map[string]*Column
 }
 
+func (t *Table) JsonString() string {
+	str := fmt.Sprintf("{\"TableName\":\"%s\", \"Columns\":[", t.TableName)
+	for i, column := range t.Columns {
+		if i == 0 {
+			str += column.JsonString()
+		} else {
+			str += "," + column.JsonString()
+		}
+	}
+	return str + "]}"
+}
+
 func SaveTableToDisk(t *Table, tablePath string) error {
 	w, err := filestream.Create(fmt.Sprintf("%s/%s.bin", tablePath, t.TableName), true)
 	defer w.MustClose()
@@ -76,4 +88,15 @@ type Column struct {
 	Tag        bool
 	Nullable   bool
 	Default    string
+}
+
+func (c *Column) JsonString() string {
+	var tag string
+	if c.Tag {
+		tag = "TAG"
+	} else {
+		tag = "VALUE"
+	}
+	return fmt.Sprintf("{\"TableName\":\"%s\",\"Type\":\"%s\",\"Tag\":\"%s\",\"Nullable\":%v,\"Default\":\"%s\"}",
+		c.ColumnName, c.Type.String(), tag, c.Nullable, c.Default)
 }

@@ -1808,8 +1808,8 @@ state 179
 	FALSE_NUM  shift 107
 	.  error
 
-	num_literal  goto 205
-	string_literal  goto 204
+	num_literal  goto 204
+	string_literal  goto 205
 	time_select_list  goto 203
 
 state 180
@@ -1987,14 +1987,14 @@ state 203
 
 
 state 204
-	time_select_list:  string_literal.    (110)
+	time_select_list:  num_literal.    (110)
 
 	.  reduce 110 (src line 336)
 
 
 state 205
-	time_select_list:  num_literal.':' num_literal 
-	time_select_list:  num_literal.':' num_literal ':' num_literal 
+	time_select_list:  string_literal.':' string_literal 
+	time_select_list:  string_literal.':' string_literal ':' num_literal 
 
 	':'  shift 213
 	.  error
@@ -2057,16 +2057,13 @@ state 212
 
 
 state 213
-	time_select_list:  num_literal ':'.num_literal 
-	time_select_list:  num_literal ':'.num_literal ':' num_literal 
+	time_select_list:  string_literal ':'.string_literal 
+	time_select_list:  string_literal ':'.string_literal ':' num_literal 
 
-	INTEGER_NUM  shift 104
-	FLOAT_NUM  shift 105
-	TRUE_NUM  shift 106
-	FALSE_NUM  shift 107
+	STRING_NUM  shift 103
 	.  error
 
-	num_literal  goto 216
+	string_literal  goto 216
 
 state 214
 	literal_list:  literal_list.',' literal 
@@ -2088,8 +2085,8 @@ state 215
 
 
 state 216
-	time_select_list:  num_literal ':' num_literal.    (111)
-	time_select_list:  num_literal ':' num_literal.':' num_literal 
+	time_select_list:  string_literal ':' string_literal.    (111)
+	time_select_list:  string_literal ':' string_literal.':' num_literal 
 
 	':'  shift 220
 	.  reduce 111 (src line 338)
@@ -2114,7 +2111,7 @@ state 219
 
 
 state 220
-	time_select_list:  num_literal ':' num_literal ':'.num_literal 
+	time_select_list:  string_literal ':' string_literal ':'.num_literal 
 
 	INTEGER_NUM  shift 104
 	FLOAT_NUM  shift 105
@@ -2125,7 +2122,7 @@ state 220
 	num_literal  goto 221
 
 state 221
-	time_select_list:  num_literal ':' num_literal ':' num_literal.    (112)
+	time_select_list:  string_literal ':' string_literal ':' num_literal.    (112)
 
 	.  reduce 112 (src line 339)
 
@@ -2136,9 +2133,9 @@ state 221
 83 working sets used
 memory: parser 201/240000
 29 extra closures
-508 shift entries, 1 exceptions
+505 shift entries, 1 exceptions
 97 goto entries
 91 entries saved by goto default
-Optimizer space used: output 286/240000
-286 table entries, 5 zero
+Optimizer space used: output 284/240000
+284 table entries, 3 zero
 maximum spread: 106, maximum offset: 220

@@ -50,8 +50,7 @@ type (
 	}
 )
 
-// distinctJoin used for op-AND,
-// if TagFilter.Key exists both in a-b, return nil
+// andJoinTagFilters used for delete-op-AND,
 func andJoinTagFilters(a *DeleteFilter, b *TagFilter) *DeleteFilter {
 	if a == nil && b == nil {
 		return nil
@@ -71,8 +70,7 @@ func andJoinTagFilters(a *DeleteFilter, b *TagFilter) *DeleteFilter {
 	return a
 }
 
-// aggregationJoin used for op-OR
-// if TagFilter.Key exists both in a-b, connect TagFilter.Value with '|'
+// orJoinTagFilters used for delete-op-OR
 func orJoinTagFilters(a *DeleteFilter, b *TagFilter) *DeleteFilter {
 	if a == nil && b == nil {
 		return nil
@@ -276,14 +274,21 @@ func TransSelectStatement(stmt *SelectStatement, t *Table) (bool, metricsql.Expr
 	}
 	// TAG-only
 	if isTag {
-		if len(stmt.Columns) == 1 {
-			if _, ok := columnTagMap[stmt.Columns[0][0].Args[0]]; !ok && len(columnValueMap) != 0 {
-				return false, nil, errors.New(fmt.Sprintf("SELECT: %s does not exists in select columns", stmt.Columns[0][0].Args[0]))
+		var ms = &MetricsExpr{}
+		var count int
+		for _, column := range stmt.Columns {
+			if item, ok := columnTagMap[column[0].Args[0]]; !ok {
+				ms.Columns = append(ms.Columns, ColumnMetric{Name: column[0].Args[0], Metric: nil})
+			} else {
+				count++
+				ms.Columns = append(ms.Columns, ColumnMetric{Name: column[0].Args[0], Metric: item})
 			}
-			return true, &metricsql.MetricExpr{LabelFilters: allLabelFilters}, nil
-		} else {
-			return false, nil, errors.New("SELECT: semantic error, multi TAGs select not supported")
 		}
+		if len(columnTagMap) > count {
+			return false, nil, fmt.Errorf("SELECT: unexcepted column in where but not selected")
+		}
+
+		return true, ms, nil
 	}
 	// VALUE-only
 	// traverse group-by and limit
@@ -334,7 +339,7 @@ func TransSelectStatement(stmt *SelectStatement, t *Table) (bool, metricsql.Expr
 					columnValueMap[column[0].Args[0]] = &metricsql.FuncExpr{
 						Name:            function.FuncName,
 						Args:            []metricsql.Expr{columnValueMap[column[0].Args[0]]},
-						KeepMetricNames: false,
+						KeepMetricNames: true,
 					}
 					continue
 				} else if len(function.Args) == 2 && function.Args[0] == "" { // normal function with 2 Args,
@@ -346,7 +351,7 @@ func TransSelectStatement(stmt *SelectStatement, t *Table) (bool, metricsql.Expr
 					columnValueMap[column[0].Args[0]] = &metricsql.FuncExpr{
 						Name:            function.FuncName,
 						Args:            []metricsql.Expr{columnValueMap[column[0].Args[0]], &metricsql.NumberExpr{N: num}},
-						KeepMetricNames: false,
+						KeepMetricNames: true,
 					}
 					continue
 				}
@@ -385,20 +390,52 @@ func TransSelectStatement(stmt *SelectStatement, t *Table) (bool, metricsql.Expr
 	if valueCount != 0 {
 		return false, nil, errors.New("SELECT: semantic error")
 	}
+
 	// union all in columnValueMap
 	var q []metricsql.Expr
 	for _, expr := range columnValueMap {
 		q = append(q, expr)
 	}
-	for len(q) > 1 {
-		q = append(q, &metricsql.FuncExpr{
-			Name:            "union",
-			Args:            q[0:2],
-			KeepMetricNames: false,
-		})
-		q = q[2:]
+	// treat as export
+	if stmt.WhereFilter == nil || stmt.WhereFilter.TimeFilter == nil || stmt.WhereFilter.TimeFilter.Step == "" {
+		var m *metricsql.MetricExpr = nil
+		k := 0
+		for i := 0; i < len(q); i++ {
+			switch q[i].(type) {
+			case *metricsql.MetricExpr:
+				if m == nil {
+					m = q[i].(*metricsql.MetricExpr)
+					for k = 0; k < len(m.LabelFilters); k++ {
+						if m.LabelFilters[k].Label == "__name__" {
+							break
+						}
+					}
+				} else {
+					j := 0
+					for j = 0; j < len(q[i].(*metricsql.MetricExpr).LabelFilters); j++ {
+						if q[i].(*metricsql.MetricExpr).LabelFilters[j].Label == "__name__" {
+							m.LabelFilters[k].Value += "|" + q[i].(*metricsql.MetricExpr).LabelFilters[j].Value
+							m.LabelFilters[k].IsRegexp = true
+							break
+						}
+					}
+				}
+			default:
+				return false, nil, fmt.Errorf("select real data doesn't support function method")
+			}
+		}
+		return false, m, nil
+	} else { // treat as query_range
+		for len(q) > 1 {
+			q = append(q, &metricsql.FuncExpr{
+				Name:            "union",
+				Args:            q[0:2],
+				KeepMetricNames: false,
+			})
+			q = q[2:]
+		}
+		return false, q[0], nil
 	}
-	return false, q[0], nil
 }
 
 func getLabelFilter(f *OtherFilter) *metricsql.LabelFilter {

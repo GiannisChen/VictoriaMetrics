@@ -40,8 +40,8 @@ var (
 	rowsPerInsert = metrics.NewHistogram(`vm_rows_per_insert{type="vmsql"}`)
 )
 
-// InsertHandler processes /api/v1/sql INSERT part.
-func InsertHandler(stmt *InsertStatement, table *Table) error {
+// insertHandler processes /api/v1/sql INSERT part.
+func insertHandler(stmt *InsertStatement, table *Table) error {
 	return writeconcurrencylimiter.Do(func() error {
 		return ParseStmt(stmt, table, func(rows []Row) error {
 			return insertRows(rows)
@@ -126,10 +126,12 @@ func ParseColumnDescriptors(stmt *InsertStatement, table *Table) ([]ColumnDescri
 			if strings.ToLower(column) == "timestamp" {
 				hasTime++
 				cds = append(cds, ColumnDescriptor{ParseTimestamp: parseTimestamp})
+				continue
 			}
 			if strings.ToLower(column) == "datetime" {
 				hasTime++
 				cds = append(cds, ColumnDescriptor{ParseTimestamp: parseDateTime})
+				continue
 			}
 			if _, ok := table.ColMap[column]; !ok {
 				return nil, fmt.Errorf("cannot find the column %s in table %s", column, table.TableName)

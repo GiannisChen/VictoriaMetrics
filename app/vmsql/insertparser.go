@@ -94,6 +94,7 @@ func ParseStmt(stmt *InsertStatement, table *Table, callback func(rows []Row) er
 			if len(tags) == 0 || len(ms) == 0 {
 				return fmt.Errorf("empty insert item")
 			}
+			tags = append([]Tag{{Key: "table", Value: table.TableName}}, tags...)
 			for _, m := range ms {
 				rows = append(rows, Row{Metric: m.Metric, Tags: tags, Value: m.Value, Timestamp: ts})
 			}

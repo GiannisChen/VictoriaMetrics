@@ -134,7 +134,7 @@ func TransSelectStatement(stmt *SelectStatement, t *Table) (bool, metricsql.Expr
 	columnValueMap := map[string]metricsql.Expr{}
 
 	// traverse the where TAG-filter first:
-	var allLabelFilters []metricsql.LabelFilter
+	allLabelFilters := []metricsql.LabelFilter{{Label: "table", Value: t.TableName}}
 	if stmt.WhereFilter != nil {
 		if stmt.WhereFilter.AndFilters != nil && len(stmt.WhereFilter.AndFilters) != 0 {
 			for _, filter := range stmt.WhereFilter.AndFilters {
@@ -256,6 +256,7 @@ func TransSelectStatement(stmt *SelectStatement, t *Table) (bool, metricsql.Expr
 	}
 	// find if TAG-only
 	isTag := false
+	isValue := false
 	for _, column := range stmt.Columns {
 		if column == nil || len(column) == 0 {
 			return false, nil, errors.New("SELECT: invalid column item")
@@ -267,8 +268,10 @@ func TransSelectStatement(stmt *SelectStatement, t *Table) (bool, metricsql.Expr
 			isTag = true
 		} else if t.ColMap[column[0].Args[0]].Tag && len(column) > 1 {
 			return false, nil, errors.New(fmt.Sprintf("SELECT: semantic error on column %s", column[0].Args[0]))
+		} else if !t.ColMap[column[0].Args[0]].Tag {
+			isValue = true
 		}
-		if !t.ColMap[column[0].Args[0]].Tag && isTag {
+		if isValue && isTag {
 			return false, nil, errors.New("SELECT: cannot select TAG, VALUE in one SQL in time series query")
 		}
 	}

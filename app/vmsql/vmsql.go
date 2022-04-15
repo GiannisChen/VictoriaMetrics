@@ -90,7 +90,7 @@ func SelectHandler(stmt *SelectStatement, startTime time.Time, w http.ResponseWr
 		return err
 	}
 
-	// isTag use `label/ /value`-like strategy.
+	// isTag use `label/.../value`-like strategy.
 	if isTag {
 		return selectTagHandler(expr, stmt, w, r, startTime)
 	}
@@ -138,20 +138,21 @@ func SelectHandler(stmt *SelectStatement, startTime time.Time, w http.ResponseWr
 		resultsCh := make(chan *quicktemplate.ByteBuffer, cgroup.AvailableCPUs())
 		doneCh := make(chan error, 1)
 
+		rss, err := netstorage.ProcessSearchQuery(sq, true, deadline)
+		if err != nil {
+			return fmt.Errorf("cannot fetch data for %q: %w", sq, err)
+		}
 		go func() {
-			err := netstorage.ExportBlocks(sq, deadline, func(mn *storage.MetricName, b *storage.Block, tr storage.TimeRange) error {
+			err := rss.RunParallel(func(rs *netstorage.Result, workerID uint) error {
 				if err := bw.Error(); err != nil {
 					return err
 				}
-				if err := b.UnmarshalData(); err != nil {
-					return fmt.Errorf("cannot unmarshal block during export: %s", err)
-				}
 				xb := prometheus.ExportBlockPool.Get().(*prometheus.ExportBlock)
-				xb.Mn = mn
-				xb.Timestamps, xb.Values = b.AppendRowsWithTimeRangeFilter(xb.Timestamps[:0], xb.Values[:0], tr)
-				if len(xb.Timestamps) > 0 {
-					writeLineFunc(xb, resultsCh)
-				}
+				xb.Mn = &rs.MetricName
+				xb.Mn.RemoveTag("table")
+				xb.Timestamps = rs.Timestamps
+				xb.Values = rs.Values
+				writeLineFunc(xb, resultsCh)
 				xb.Reset()
 				prometheus.ExportBlockPool.Put(xb)
 				return nil
@@ -195,7 +196,7 @@ func SelectHandler(stmt *SelectStatement, startTime time.Time, w http.ResponseWr
 	w.Header().Set("Content-Type", "application/json")
 	bw := bufferedwriter.Get(w)
 	defer bufferedwriter.Put(bw)
-	prometheus.WriteQueryRangeResponse(bw, result)
+	prometheus.WriteSelectStepValueResponse(bw, result)
 	if err := bw.Flush(); err != nil {
 		return fmt.Errorf("cannot send query range response to remote client: %w", err)
 	}
@@ -270,6 +271,7 @@ func DeleteHandler(stmt *DeleteStatement, startTime time.Time, w http.ResponseWr
 		return fmt.Errorf("")
 	}
 
+	tagFilterss[0] = append(tagFilterss[0], storage.TagFilter{Key: []byte("table"), Value: []byte(table.TableName)})
 	sq := storage.NewSearchQuery(0, ct, tagFilterss)
 	deletedCount, err := netstorage.DeleteSeries(sq, deadline)
 	if err != nil {
@@ -303,7 +305,7 @@ func DropHandler(stmt *DropStatement, startTime time.Time, w http.ResponseWriter
 	if err != nil {
 		return err
 	}
-
+	tagFilterss[0] = append(tagFilterss[0], storage.TagFilter{Key: []byte("table"), Value: []byte(table.TableName)})
 	sq := storage.NewSearchQuery(0, ct, tagFilterss)
 	deletedCount, err := netstorage.DeleteSeries(sq, deadline)
 	if err != nil {
@@ -374,7 +376,16 @@ func selectTagHandler(expr metricsql.Expr, stmt *SelectStatement, w http.Respons
 				MinTimestamp: start,
 				MaxTimestamp: end,
 			}
-			for _, column := range expr.(*MetricsExpr).Columns {
+
+			if _, err := bw.Write([]byte{'{'}); err != nil {
+				return err
+			}
+			for i, column := range expr.(*MetricsExpr).Columns {
+				if i != 0 {
+					if _, err := bw.Write([]byte(",\n")); err != nil {
+						return err
+					}
+				}
 				var labelValues []string
 				var err error
 				if column.Metric == nil {
@@ -386,13 +397,16 @@ func selectTagHandler(expr metricsql.Expr, stmt *SelectStatement, w http.Respons
 				if err != nil {
 					return err
 				}
-				prometheus.WriteLabelValuesResponse(bw, labelValues)
-				if _, err := bw.Write([]byte{'\n'}); err != nil {
-					return err
-				}
+				prometheus.WriteMultiLabelsValuesResponse(bw, column.Name, labelValues)
 				if err := bw.Flush(); err != nil {
 					return fmt.Errorf("canot flush label values to remote client: %w", err)
 				}
+			}
+			if _, err := bw.Write([]byte{'}'}); err != nil {
+				return err
+			}
+			if err := bw.Flush(); err != nil {
+				return fmt.Errorf("canot flush label values to remote client: %w", err)
 			}
 			return nil
 		} else {

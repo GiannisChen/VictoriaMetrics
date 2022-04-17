@@ -63,7 +63,7 @@ func mustSave(w *filestream.Writer) error {
 			return err
 		}
 	}
-	w.MustFlush(true)
+	w.MustFlush(false)
 	return nil
 }
 

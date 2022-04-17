@@ -139,27 +139,19 @@ table_column_list:
 column_definition:
 	sql_id column_type TAG
 	{
-		$$ = &Column{ ColumnName: $1, Type: $2, Tag: true, Nullable: true, Default: "" }
-	}
-	| sql_id column_type TAG NOT NULL
-	{
-		$$ = &Column{ ColumnName: $1, Type: $2, Tag: true, Nullable: false, Default: "" }
+		$$ = &Column{ ColumnName: $1, Type: $2, Tag: true, Default: "" }
 	}
 	| sql_id column_type TAG DEFAULT literal
 	{
-		$$ = &Column{ ColumnName: $1, Type: $2, Tag: true, Nullable: true, Default: $5 }
+		$$ = &Column{ ColumnName: $1, Type: $2, Tag: true, Default: $5 }
 	}
 	| sql_id column_type VALUE
 	{
-		$$ = &Column{ ColumnName: $1, Type: $2, Tag: false, Nullable: true, Default: "" }
-	}
-	| sql_id column_type VALUE NOT NULL
-	{
-		$$ = &Column{ ColumnName: $1, Type: $2, Tag: false, Nullable: false, Default: "" }
+		$$ = &Column{ ColumnName: $1, Type: $2, Tag: false, Default: "" }
 	}
 	| sql_id column_type VALUE DEFAULT literal
 	{
-		$$ = &Column{ ColumnName: $1, Type: $2, Tag: false, Nullable: true, Default: $5 }
+		$$ = &Column{ ColumnName: $1, Type: $2, Tag: false, Default: $5 }
 	}
 
 column_type:
@@ -229,7 +221,8 @@ literal_list:
 	| literal_list ',' literal { $$ = append($1, $3) }
 
 drop_statement:
-	DROP TABLE sql_id { $$ = &DropStatement{TableName: $3} }
+	DROP TABLE sql_id { $$ = &DropStatement{TableName: $3, IfExists: false} }
+	| DROP TABLE IF EXISTS sql_id { $$ = &DropStatement{TableName: $5, IfExists: true} }
 
 delete_statement:
 	DELETE FROM sql_id { $$ = &DeleteStatement{TableName: $3, IsStar: true, Filters: nil, HasWhere: false} }

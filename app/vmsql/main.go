@@ -104,6 +104,7 @@ func Init() {
 
 func Stop() {
 	MustCloseCache(*vmstorage.DataPath + "/table")
+	logger.Infof("vmsql cache flushed")
 }
 
 func sendSQLError(w http.ResponseWriter, r *http.Request, err error) {

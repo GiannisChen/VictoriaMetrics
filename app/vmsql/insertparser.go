@@ -15,6 +15,7 @@ type ColumnDescriptor struct {
 	ParseTimestamp func(s string) (int64, error)
 	TagName        string
 	MetricName     string
+	IsTag          bool
 }
 
 type Row struct {
@@ -84,10 +85,18 @@ func ParseStmt(stmt *InsertStatement, table *Table, callback func(rows []Row) er
 			}
 			if len(datum) < len(cds) {
 				for i := len(datum); i < len(cds); i++ {
-					if cds[i].TagName != "" {
-						tags = append(tags, Tag{Key: cds[i].TagName, Value: cds[i].MetricName})
+					if cds[i].IsTag {
+						if cds[i].TagName != "" {
+							tags = append(tags, Tag{Key: cds[i].TagName, Value: cds[i].MetricName})
+						} else {
+							return fmt.Errorf("synatx error")
+						}
 					} else {
-						return fmt.Errorf("synatx error")
+						f, err := fastfloat.Parse(cds[i].MetricName)
+						if err != nil {
+							return fmt.Errorf("illegal default value")
+						}
+						ms = append(ms, Metric{Metric: cds[i].TagName, Value: f})
 					}
 				}
 			}
@@ -113,9 +122,9 @@ func ParseColumnDescriptors(stmt *InsertStatement, table *Table) ([]ColumnDescri
 		}
 		for _, column := range table.Columns {
 			if column.Tag {
-				cds = append(cds, ColumnDescriptor{TagName: column.ColumnName})
+				cds = append(cds, ColumnDescriptor{TagName: column.ColumnName, IsTag: true})
 			} else {
-				cds = append(cds, ColumnDescriptor{MetricName: column.ColumnName})
+				cds = append(cds, ColumnDescriptor{MetricName: column.ColumnName, IsTag: false})
 			}
 		}
 		return cds, nil
@@ -140,20 +149,24 @@ func ParseColumnDescriptors(stmt *InsertStatement, table *Table) ([]ColumnDescri
 			if table.ColMap[column].Tag {
 				hasTag = true
 				used[column] = true
-				cds = append(cds, ColumnDescriptor{TagName: column})
+				cds = append(cds, ColumnDescriptor{TagName: column, IsTag: true})
 			} else {
 				hasValue = true
 				used[column] = true
-				cds = append(cds, ColumnDescriptor{MetricName: column})
+				cds = append(cds, ColumnDescriptor{MetricName: column, IsTag: false})
 			}
 		}
 		for _, column := range table.Columns {
 			if _, ok := used[column.ColumnName]; !ok {
-				if column.Tag && !column.Nullable && column.Default == "" {
+				if column.Default == "" {
 					return nil, fmt.Errorf("cannot ignore not null column %s", column.ColumnName)
-				} else if column.Tag && !column.Nullable && column.Default != "" {
-					hasTag = true
-					cds = append(cds, ColumnDescriptor{TagName: column.ColumnName, MetricName: column.Default})
+				} else if column.Default != "" {
+					if column.Tag {
+						hasTag = true
+					} else {
+						hasValue = true
+					}
+					cds = append(cds, ColumnDescriptor{TagName: column.ColumnName, MetricName: column.Default, IsTag: column.Tag})
 				}
 			}
 		}

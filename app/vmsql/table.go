@@ -45,7 +45,7 @@ func SaveTableToDisk(t *Table, tablePath string) error {
 			return err
 		}
 	}
-	w.MustFlush(true)
+	w.MustFlush(false)
 	return nil
 }
 
@@ -86,7 +86,6 @@ type Column struct {
 	ColumnName string
 	Type       reflect.Kind
 	Tag        bool
-	Nullable   bool
 	Default    string
 }
 
@@ -97,6 +96,6 @@ func (c *Column) JsonString() string {
 	} else {
 		tag = "VALUE"
 	}
-	return fmt.Sprintf("{\"TableName\":\"%s\",\"Type\":\"%s\",\"Tag\":\"%s\",\"Nullable\":%v,\"Default\":\"%s\"}",
-		c.ColumnName, c.Type.String(), tag, c.Nullable, c.Default)
+	return fmt.Sprintf("{\"TableName\":\"%s\",\"Type\":\"%s\",\"Tag\":\"%s\",\"Default\":\"%s\"}",
+		c.ColumnName, c.Type.String(), tag, c.Default)
 }

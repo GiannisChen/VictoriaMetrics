@@ -22,6 +22,7 @@ type (
 
 	DropStatement struct {
 		TableName string
+		IfExists  bool
 	}
 
 	DeleteStatement struct {

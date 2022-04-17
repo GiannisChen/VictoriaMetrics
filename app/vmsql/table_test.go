@@ -9,21 +9,21 @@ import (
 func TestTable_Save(t *testing.T) {
 	table1 := &Table{
 		TableName: "test",
-		Columns: []*Column{{ColumnName: "city", Type: reflect.String, Tag: true, Nullable: false, Default: "beijing"},
-			{ColumnName: "workshop", Type: reflect.String, Tag: true, Nullable: false, Default: "f1"},
-			{ColumnName: "status", Type: reflect.String, Tag: true, Nullable: false, Default: "200"},
-			{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Nullable: false, Default: "v"},
-			{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"},
-			{ColumnName: "energy", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"}},
+		Columns: []*Column{{ColumnName: "city", Type: reflect.String, Tag: true, Default: "beijing"},
+			{ColumnName: "workshop", Type: reflect.String, Tag: true, Default: "f1"},
+			{ColumnName: "status", Type: reflect.String, Tag: true, Default: "200"},
+			{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Default: "v"},
+			{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Default: "0.0"},
+			{ColumnName: "energy", Type: reflect.Float64, Tag: false, Default: "0.0"}},
 		ColMap: nil,
 	}
 	table2 := &Table{TableName: "test2",
-		Columns: []*Column{{ColumnName: "city", Type: reflect.String, Tag: true, Nullable: false, Default: "beijing"},
-			{ColumnName: "workshop", Type: reflect.String, Tag: true, Nullable: false, Default: "f1"},
-			{ColumnName: "status", Type: reflect.String, Tag: true, Nullable: false, Default: "200"},
-			{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Nullable: false, Default: "v"},
-			{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"},
-			{ColumnName: "energy", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"}},
+		Columns: []*Column{{ColumnName: "city", Type: reflect.String, Tag: true, Default: "beijing"},
+			{ColumnName: "workshop", Type: reflect.String, Tag: true, Default: "f1"},
+			{ColumnName: "status", Type: reflect.String, Tag: true, Default: "200"},
+			{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Default: "v"},
+			{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Default: "0.0"},
+			{ColumnName: "energy", Type: reflect.Float64, Tag: false, Default: "0.0"}},
 		ColMap: nil}
 	table3 := &Table{
 		TableName: "test3",
@@ -68,21 +68,21 @@ func TestTable_LoadOrNew(t *testing.T) {
 func TestTable_JsonString(t *testing.T) {
 	table1 := &Table{
 		TableName: "test",
-		Columns: []*Column{{ColumnName: "city", Type: reflect.String, Tag: true, Nullable: false, Default: "beijing"},
-			{ColumnName: "workshop", Type: reflect.String, Tag: true, Nullable: false, Default: "f1"},
-			{ColumnName: "status", Type: reflect.String, Tag: true, Nullable: false, Default: "200"},
-			{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Nullable: false, Default: "v"},
-			{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"},
-			{ColumnName: "energy", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"}},
+		Columns: []*Column{{ColumnName: "city", Type: reflect.String, Tag: true, Default: "beijing"},
+			{ColumnName: "workshop", Type: reflect.String, Tag: true, Default: "f1"},
+			{ColumnName: "status", Type: reflect.String, Tag: true, Default: "200"},
+			{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Default: "v"},
+			{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Default: "0.0"},
+			{ColumnName: "energy", Type: reflect.Float64, Tag: false, Default: "0.0"}},
 		ColMap: nil,
 	}
 	table2 := &Table{TableName: "test2",
-		Columns: []*Column{{ColumnName: "city", Type: reflect.String, Tag: true, Nullable: false, Default: "beijing"},
-			{ColumnName: "workshop", Type: reflect.String, Tag: true, Nullable: false, Default: "f1"},
-			{ColumnName: "status", Type: reflect.String, Tag: true, Nullable: false, Default: "200"},
-			{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Nullable: false, Default: "v"},
-			{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"},
-			{ColumnName: "energy", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"}},
+		Columns: []*Column{{ColumnName: "city", Type: reflect.String, Tag: true, Default: "beijing"},
+			{ColumnName: "workshop", Type: reflect.String, Tag: true, Default: "f1"},
+			{ColumnName: "status", Type: reflect.String, Tag: true, Default: "200"},
+			{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Default: "v"},
+			{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Default: "0.0"},
+			{ColumnName: "energy", Type: reflect.Float64, Tag: false, Default: "0.0"}},
 		ColMap: nil}
 
 	fmt.Println(table1.JsonString())

@@ -11,11 +11,11 @@ func TestLoadTableCacheFromFileOrNew(t *testing.T) {
 
 	err := AddTable(&Table{
 		TableName: "add1",
-		Columns: []*Column{{ColumnName: "workshop", Type: reflect.String, Tag: true, Nullable: false, Default: "f1"},
-			{ColumnName: "status", Type: reflect.String, Tag: true, Nullable: false, Default: "200"},
-			{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Nullable: false, Default: "v"},
-			{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"},
-			{ColumnName: "energy", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"}},
+		Columns: []*Column{{ColumnName: "workshop", Type: reflect.String, Tag: true, Default: "f1"},
+			{ColumnName: "status", Type: reflect.String, Tag: true, Default: "200"},
+			{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Default: "v"},
+			{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Default: "0.0"},
+			{ColumnName: "energy", Type: reflect.Float64, Tag: false, Default: "0.0"}},
 		ColMap: nil,
 	}, "./test")
 	if err != nil {
@@ -29,11 +29,11 @@ func TestLoadTableCacheFromFileOrNew(t *testing.T) {
 
 	err = AddTable(&Table{
 		TableName: "add2",
-		Columns: []*Column{{ColumnName: "workshop", Type: reflect.String, Tag: true, Nullable: false, Default: "f1"},
-			{ColumnName: "status", Type: reflect.String, Tag: true, Nullable: false, Default: "200"},
-			{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Nullable: false, Default: "v"},
-			{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"},
-			{ColumnName: "energy", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"}},
+		Columns: []*Column{{ColumnName: "workshop", Type: reflect.String, Tag: true, Default: "f1"},
+			{ColumnName: "status", Type: reflect.String, Tag: true, Default: "200"},
+			{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Default: "v"},
+			{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Default: "0.0"},
+			{ColumnName: "energy", Type: reflect.Float64, Tag: false, Default: "0.0"}},
 		ColMap: nil,
 	}, "./test")
 	if err != nil {
@@ -41,17 +41,21 @@ func TestLoadTableCacheFromFileOrNew(t *testing.T) {
 	}
 	err = AlterTable(&Table{
 		TableName: "add1",
-		Columns: []*Column{{ColumnName: "workshop1", Type: reflect.String, Tag: true, Nullable: false, Default: "f1"},
-			{ColumnName: "status1", Type: reflect.String, Tag: true, Nullable: false, Default: "200"},
-			{ColumnName: "voltage1", Type: reflect.Float64, Tag: false, Nullable: false, Default: "v"},
-			{ColumnName: "electricity1", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"},
-			{ColumnName: "energy1", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"}},
+		Columns: []*Column{{ColumnName: "workshop1", Type: reflect.String, Tag: true, Default: "f1"},
+			{ColumnName: "status1", Type: reflect.String, Tag: true, Default: "200"},
+			{ColumnName: "voltage1", Type: reflect.Float64, Tag: false, Default: "v"},
+			{ColumnName: "electricity1", Type: reflect.Float64, Tag: false, Default: "0.0"},
+			{ColumnName: "energy1", Type: reflect.Float64, Tag: false, Default: "0.0"}},
 		ColMap: nil,
 	}, "./test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	err = DeleteTable("add1", "./test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = DeleteTable("add2", "./test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,11 +74,11 @@ func TestLoadTableCacheFromFileOrNewParallel(t *testing.T) {
 	go func() {
 		err := AddTable(&Table{
 			TableName: "add1",
-			Columns: []*Column{{ColumnName: "workshop", Type: reflect.String, Tag: true, Nullable: false, Default: "f1"},
-				{ColumnName: "status", Type: reflect.String, Tag: true, Nullable: false, Default: "200"},
-				{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Nullable: false, Default: "v"},
-				{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"},
-				{ColumnName: "energy", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"}},
+			Columns: []*Column{{ColumnName: "workshop", Type: reflect.String, Tag: true, Default: "f1"},
+				{ColumnName: "status", Type: reflect.String, Tag: true, Default: "200"},
+				{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Default: "v"},
+				{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Default: "0.0"},
+				{ColumnName: "energy", Type: reflect.Float64, Tag: false, Default: "0.0"}},
 			ColMap: nil,
 		}, "./test")
 		if err != nil {
@@ -84,11 +88,11 @@ func TestLoadTableCacheFromFileOrNewParallel(t *testing.T) {
 	go func() {
 		err := AddTable(&Table{
 			TableName: "add2",
-			Columns: []*Column{{ColumnName: "workshop", Type: reflect.String, Tag: true, Nullable: false, Default: "f1"},
-				{ColumnName: "status", Type: reflect.String, Tag: true, Nullable: false, Default: "200"},
-				{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Nullable: false, Default: "v"},
-				{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"},
-				{ColumnName: "energy", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"}},
+			Columns: []*Column{{ColumnName: "workshop", Type: reflect.String, Tag: true, Default: "f1"},
+				{ColumnName: "status", Type: reflect.String, Tag: true, Default: "200"},
+				{ColumnName: "voltage", Type: reflect.Float64, Tag: false, Default: "v"},
+				{ColumnName: "electricity", Type: reflect.Float64, Tag: false, Default: "0.0"},
+				{ColumnName: "energy", Type: reflect.Float64, Tag: false, Default: "0.0"}},
 			ColMap: nil,
 		}, "./test")
 		if err != nil {
@@ -100,11 +104,11 @@ func TestLoadTableCacheFromFileOrNewParallel(t *testing.T) {
 	go func() {
 		err := AlterTable(&Table{
 			TableName: "add1",
-			Columns: []*Column{{ColumnName: "workshop1", Type: reflect.String, Tag: true, Nullable: false, Default: "f1"},
-				{ColumnName: "status1", Type: reflect.String, Tag: true, Nullable: false, Default: "200"},
-				{ColumnName: "voltage1", Type: reflect.Float64, Tag: false, Nullable: false, Default: "v"},
-				{ColumnName: "electricity1", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"},
-				{ColumnName: "energy1", Type: reflect.Float64, Tag: false, Nullable: false, Default: "0.0"}},
+			Columns: []*Column{{ColumnName: "workshop1", Type: reflect.String, Tag: true, Default: "f1"},
+				{ColumnName: "status1", Type: reflect.String, Tag: true, Default: "200"},
+				{ColumnName: "voltage1", Type: reflect.Float64, Tag: false, Default: "v"},
+				{ColumnName: "electricity1", Type: reflect.Float64, Tag: false, Default: "0.0"},
+				{ColumnName: "energy1", Type: reflect.Float64, Tag: false, Default: "0.0"}},
 			ColMap: nil,
 		}, "./test")
 		if err != nil {

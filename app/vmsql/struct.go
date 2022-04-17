@@ -281,10 +281,12 @@ func TransSelectStatement(stmt *SelectStatement, t *Table) (bool, metricsql.Expr
 		var count int
 		for _, column := range stmt.Columns {
 			if item, ok := columnTagMap[column[0].Args[0]]; !ok {
-				ms.Columns = append(ms.Columns, ColumnMetric{Name: column[0].Args[0], Metric: nil})
+				ms.Columns = append(ms.Columns, ColumnMetric{Name: column[0].Args[0], Metric: []*metricsql.LabelFilter{{
+					Label: "table", Value: t.TableName, IsNegative: false, IsRegexp: false}}})
 			} else {
 				count++
-				ms.Columns = append(ms.Columns, ColumnMetric{Name: column[0].Args[0], Metric: item})
+				ms.Columns = append(ms.Columns, ColumnMetric{Name: column[0].Args[0], Metric: append(item, &metricsql.LabelFilter{
+					Label: "table", Value: t.TableName, IsNegative: false, IsRegexp: false})})
 			}
 		}
 		if len(columnTagMap) > count {

@@ -226,6 +226,10 @@ func CreateHandler(stmt *CreateStatement, startTime time.Time, w http.ResponseWr
 	tableName := *vmstorage.DataPath + "/table"
 	if _, err := FindTable(stmt.CreateTable.TableName, tableName); err == nil {
 		if stmt.IfNotExists {
+			w.Header().Set("Content-Type", "application/json")
+			if _, err := w.Write([]byte(`{"message":"create success"}`)); err != nil {
+				return err
+			}
 			return nil
 		} else {
 			return fmt.Errorf("table already exists")
@@ -291,10 +295,14 @@ func DeleteHandler(stmt *DeleteStatement, startTime time.Time, w http.ResponseWr
 func DropHandler(stmt *DropStatement, startTime time.Time, w http.ResponseWriter, r *http.Request) error {
 	tableDirPath := *vmstorage.DataPath + "/table"
 	table, err := FindTable(stmt.TableName, tableDirPath)
-	if err != nil {
-		return err
-	}
-	if table == nil {
+	if err != nil || table == nil {
+		if stmt.IfExists {
+			w.Header().Set("Content-Type", "application/json")
+			if _, err := w.Write([]byte(`{"message":"drop success"}`)); err != nil {
+				return err
+			}
+			return nil
+		}
 		return fmt.Errorf("cannot find table %s", stmt.TableName)
 	}
 	defer deleteDuration.UpdateDuration(startTime)

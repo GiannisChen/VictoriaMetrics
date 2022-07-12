@@ -2,42 +2,35 @@ package gorillaz
 
 import (
 	"errors"
-	"fmt"
-	"github.com/VictoriaMetrics/VictoriaMetrics/lib/encoding/utils"
-	"io"
 	"math/bits"
 )
 
-// Compress
-func Compress(dst []byte, src []int64) (result []byte, firstValue int64, err error) {
-	if len(src) < 1 {
-		return nil, 0, fmt.Errorf("BUG: src must contain at least 1 item; got %d items", len(src))
-	}
-	firstValue = src[0]
-	v := uint64(firstValue)
-	bs := &utils.ByteWrapper{Stream: &dst, Count: 0}
+// Compress uses full predicting-strategy, which means xor right-value is the predictor's value.
+func Compress(dst []byte, src []int64) []byte {
+	v := uint64(src[0])
+	prev := v
+	bs := &ByteWrapper{Stream: &dst, Count: 0}
 	bs.AppendBits(v, 64) // append first value without any compression
 	src = src[1:]
 	prevLeadingZeros, prevTrailingZeros := ^uint8(0), uint8(0)
 	sigbits := uint8(0)
-	prev := v
 	for _, num := range src {
 		v = uint64(num) ^ prev
 		if v == 0 {
-			bs.AppendBit(utils.Zero)
+			bs.AppendBit(Zero)
 		} else {
-			bs.AppendBit(utils.One)
+			bs.AppendBit(One)
 			leadingZeros, trailingZeros := uint8(bits.LeadingZeros64(v)), uint8(bits.TrailingZeros64(v))
 			// clamp number of leading zeros to avoid overflow when encoding
 			if leadingZeros >= 64 {
 				leadingZeros = 63
 			}
 			if prevLeadingZeros != ^uint8(0) && leadingZeros >= prevLeadingZeros && trailingZeros >= prevTrailingZeros {
-				bs.AppendBit(utils.Zero)
+				bs.AppendBit(Zero)
 				bs.AppendBits(v>>prevTrailingZeros, 64-int(prevLeadingZeros)-int(prevTrailingZeros))
 			} else {
 				prevLeadingZeros, prevTrailingZeros = leadingZeros, trailingZeros
-				bs.AppendBit(utils.One)
+				bs.AppendBit(One)
 				bs.AppendBits(uint64(leadingZeros), 6)
 				sigbits = 64 - leadingZeros - trailingZeros
 				bs.AppendBits(uint64(sigbits), 6)
@@ -47,31 +40,26 @@ func Compress(dst []byte, src []int64) (result []byte, firstValue int64, err err
 		prev = uint64(num)
 	}
 	bs.Finish()
-	return dst, firstValue, nil
+	return dst
 }
 
 // Decompress append data to dst and return the appended dst
 func Decompress(dst []int64, src []byte) ([]int64, error) {
-	if len(dst) == 0 {
-		return nil, errors.New("dst cap is zero")
-	}
-
-	bs := &utils.ByteWrapper{Stream: &src, Count: 8}
+	bs := &ByteWrapper{Stream: &src, Count: 8}
 	firstValue, err := bs.ReadBits(64)
 	if err != nil {
 		return nil, err
 	}
-	dst[0] = int64(firstValue)
+	dst = append(dst, int64(firstValue))
 	prev := firstValue
-
 	prevLeadingZeros, prevTrailingZeros := uint8(0), uint8(0)
-	for i := 1; i < len(dst); i++ {
+	for true {
 		b, err := bs.ReadBit()
 		if err != nil {
 			return nil, err
 		}
-		if b == utils.Zero {
-			dst[i] = int64(prev)
+		if b == Zero {
+			dst = append(dst, int64(prev))
 			continue
 		} else {
 			b, err = bs.ReadBit()
@@ -79,7 +67,7 @@ func Decompress(dst []int64, src []byte) ([]int64, error) {
 				return nil, err
 			}
 			leadingZeros, trailingZeros := prevLeadingZeros, prevTrailingZeros
-			if b == utils.One {
+			if b == One {
 				bts, err := bs.ReadBits(6) // read leading zeros' length
 				if err != nil {
 					return nil, err
@@ -94,8 +82,8 @@ func Decompress(dst []int64, src []byte) ([]int64, error) {
 					midLen = 64
 				}
 				if midLen+leadingZeros > 64 {
-					if b, err = bs.ReadBit(); b == utils.Zero {
-						return nil, io.EOF
+					if b, err = bs.ReadBit(); b == Zero {
+						return dst, nil
 					}
 					return nil, errors.New("invalid bits")
 				}
@@ -108,7 +96,7 @@ func Decompress(dst []int64, src []byte) ([]int64, error) {
 			}
 			v := prev
 			v ^= bts << trailingZeros
-			dst[i] = int64(v)
+			dst = append(dst, int64(v))
 			prev = v
 		}
 	}

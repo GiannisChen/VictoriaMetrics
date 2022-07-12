@@ -263,6 +263,16 @@ func AppendFloatToInt64(dst []int64, src []float64) ([]int64, int16) {
 	return dst[:len(dst)+len(src)], 0
 }
 
+func AppendInt64ToFloat(dst []float64, va []int64, _ int16) []float64 {
+	// Extend dst capacity in order to eliminate memory allocations below.
+	dst = ExtendFloat64sCapacity(dst, len(va))
+	a := dst[len(dst) : len(dst)+len(va)]
+	for i := 0; i < len(va); i++ {
+		a[i] = math.Float64frombits(uint64(va[i]))
+	}
+	return dst[:len(dst)+len(va)]
+}
+
 type vaeBuf struct {
 	va []int64
 	ea []int16

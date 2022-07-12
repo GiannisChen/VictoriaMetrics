@@ -113,7 +113,7 @@ func (rrm *rawRowsMarshaler) marshalToInmemoryPart(mp *inmemoryPart, rows []rawR
 			continue
 		}
 
-		rrm.auxValues, scale = decimal.AppendFloatToDecimal(rrm.auxValues[:0], rrm.auxFloatValues)
+		rrm.auxValues, scale = decimal.AppendFloatToInt64(rrm.auxValues[:0], rrm.auxFloatValues)
 		tmpBlock.Init(tsid, rrm.auxTimestamps, rrm.auxValues, scale, precisionBits)
 		rrm.bsw.WriteExternalBlock(tmpBlock, ph, &rowsMerged)
 
@@ -123,7 +123,7 @@ func (rrm *rawRowsMarshaler) marshalToInmemoryPart(mp *inmemoryPart, rows []rawR
 		rrm.auxFloatValues = append(rrm.auxFloatValues[:0], r.Value)
 	}
 
-	rrm.auxValues, scale = decimal.AppendFloatToDecimal(rrm.auxValues[:0], rrm.auxFloatValues)
+	rrm.auxValues, scale = decimal.AppendFloatToInt64(rrm.auxValues[:0], rrm.auxFloatValues)
 	tmpBlock.Init(tsid, rrm.auxTimestamps, rrm.auxValues, scale, precisionBits)
 	rrm.bsw.WriteExternalBlock(tmpBlock, ph, &rowsMerged)
 	if rowsMerged != uint64(len(rows)) {

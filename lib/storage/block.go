@@ -302,7 +302,7 @@ func (b *Block) UnmarshalData() error {
 func (b *Block) AppendRowsWithTimeRangeFilter(dstTimestamps []int64, dstValues []float64, tr TimeRange) ([]int64, []float64) {
 	timestamps, values := b.filterTimestamps(tr)
 	dstTimestamps = append(dstTimestamps, timestamps...)
-	dstValues = decimal.AppendDecimalToFloat(dstValues, values, b.bh.Scale)
+	dstValues = decimal.AppendInt64ToFloat(dstValues, values, b.bh.Scale)
 	return dstTimestamps, dstValues
 }
 

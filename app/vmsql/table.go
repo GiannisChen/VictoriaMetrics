@@ -13,9 +13,9 @@ const (
 )
 
 type Table struct {
-	TableName string
-	Columns   []*Column
-	ColMap    map[string]*Column
+	TableName string             `json:"tableName"`
+	Columns   []*Column          `json:"columns"`
+	ColMap    map[string]*Column `json:"-"`
 }
 
 func (t *Table) JsonString() string {
@@ -83,10 +83,10 @@ func DeleteTableOnDisk(tableName string, tablePath string) error {
 }
 
 type Column struct {
-	ColumnName string
-	Type       reflect.Kind
-	Tag        bool
-	Default    string
+	ColumnName string       `json:"columnName"`
+	Type       reflect.Kind `json:"type"`
+	Tag        bool         `json:"tag"`
+	Default    string       `json:"default"`
 }
 
 func (c *Column) JsonString() string {

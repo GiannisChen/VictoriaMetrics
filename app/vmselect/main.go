@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/VictoriaMetrics/VictoriaMetrics/app/vmsql"
 	"net/http"
 	"os"
 	"strings"
@@ -62,6 +63,10 @@ func getDefaultMaxConcurrentRequests() int {
 
 func main() {
 	// Write flags and help message to stdout, since it is easier to grep or pipe.
+
+	// test
+	os.Args = append(os.Args, "-storageNode=127.0.0.1")
+	// end-test
 	flag.CommandLine.SetOutput(os.Stdout)
 	flag.Usage = usage
 	envflag.Parse()
@@ -222,6 +227,8 @@ func requestHandler(w http.ResponseWriter, r *http.Request) bool {
 		return selectHandler(startTime, w, r, p, at)
 	case "delete":
 		return deleteHandler(startTime, w, r, p, at)
+	case "sql":
+		return sqlHandler(startTime, w, r, p, at)
 	default:
 		// This is not our link
 		return false
@@ -547,6 +554,35 @@ func deleteHandler(startTime time.Time, w http.ResponseWriter, r *http.Request, 
 	}
 }
 
+func sqlHandler(startTime time.Time, w http.ResponseWriter, r *http.Request, p *httpserver.Path, at *auth.Token) bool {
+	defer func() {
+		// Count per-tenant cumulative durations and total requests
+		httpRequests.Get(at).Inc()
+		httpRequestsDuration.Get(at).Add(int(time.Since(startTime).Milliseconds()))
+	}()
+	if p.Suffix == "" {
+		if r.Method != "GET" {
+			return false
+		}
+		fmt.Fprintf(w, "<h2>VictoriaMetrics cluster - vmsql</h2></br>")
+		fmt.Fprintf(w, "OPS! We do not have a document.</br>")
+		return true
+	}
+	switch p.Suffix {
+	case "api/v1/sql":
+		sqlSelectRequests.Inc()
+		httpserver.EnableCORS(w, r)
+		if err := vmsql.SQLSelectHandler(startTime, at, w, r); err != nil {
+			sqlSelectErrors.Inc()
+			sendPrometheusError(w, r, err)
+			return true
+		}
+		return true
+	default:
+		return false
+	}
+}
+
 func isGraphiteTagsPath(path string) bool {
 	switch path {
 	// See https://graphite.readthedocs.io/en/stable/tags.html for a list of Graphite Tags API paths.
@@ -583,6 +619,9 @@ var (
 
 	queryRangeRequests = metrics.NewCounter(`vm_http_requests_total{path="/select/{}/prometheus/api/v1/query_range"}`)
 	queryRangeErrors   = metrics.NewCounter(`vm_http_request_errors_total{path="/select/{}/prometheus/api/v1/query_range"}`)
+
+	sqlSelectRequests = metrics.NewCounter(`vm_http_requests_total{path="/sql/{}/api/v1/sql"}`)
+	sqlSelectErrors   = metrics.NewCounter(`vm_http_request_errors_total{path="/sql/{}/api/v1/sql"}`)
 
 	seriesRequests = metrics.NewCounter(`vm_http_requests_total{path="/select/{}/prometheus/api/v1/series"}`)
 	seriesErrors   = metrics.NewCounter(`vm_http_request_errors_total{path="/select/{}/prometheus/api/v1/series"}`)

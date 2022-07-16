@@ -12,7 +12,7 @@ import (
 func TestRemoveEmptyValuesAndTimeseries(t *testing.T) {
 	f := func(tss []netstorage.Result, tssExpected []netstorage.Result) {
 		t.Helper()
-		tss = removeEmptyValuesAndTimeseries(tss)
+		tss = RemoveEmptyValuesAndTimeseries(tss)
 		if !reflect.DeepEqual(tss, tssExpected) {
 			t.Fatalf("unexpected result; got %v; want %v", tss, tssExpected)
 		}
@@ -51,7 +51,7 @@ func TestRemoveEmptyValuesAndTimeseries(t *testing.T) {
 func TestAdjustLastPoints(t *testing.T) {
 	f := func(tss []netstorage.Result, start, end int64, tssExpected []netstorage.Result) {
 		t.Helper()
-		tss = adjustLastPoints(tss, start, end)
+		tss = AdjustLastPoints(tss, start, end)
 		for i, ts := range tss {
 			for j, value := range ts.Values {
 				expectedValue := tssExpected[i].Values[j]

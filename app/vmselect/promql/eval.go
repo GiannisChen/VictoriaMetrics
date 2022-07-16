@@ -144,7 +144,7 @@ func (ec *EvalConfig) updateIsPartialResponse(isPartialResponse bool) {
 	}
 }
 
-func (ec *EvalConfig) validate() {
+func (ec *EvalConfig) Validate() {
 	if ec.Start > ec.End {
 		logger.Panicf("BUG: start cannot exceed end; got %d vs %d", ec.Start, ec.End)
 	}
@@ -200,7 +200,7 @@ func getTimestamps(start, end, step int64) []int64 {
 	return timestamps
 }
 
-func evalExpr(ec *EvalConfig, e metricsql.Expr) ([]*timeseries, error) {
+func EvalExpr(ec *EvalConfig, e metricsql.Expr) ([]*timeseries, error) {
 	if me, ok := e.(*metricsql.MetricExpr); ok {
 		re := &metricsql.RollupExpr{
 			Expr: me,
@@ -304,7 +304,7 @@ func evalExpr(ec *EvalConfig, e metricsql.Expr) ([]*timeseries, error) {
 		go func() {
 			defer wg.Done()
 			ecCopy := newEvalConfig(ec)
-			tss, err := evalExpr(ecCopy, be.Left)
+			tss, err := EvalExpr(ecCopy, be.Left)
 			mu.Lock()
 			if err != nil {
 				if errGlobal == nil {
@@ -318,7 +318,7 @@ func evalExpr(ec *EvalConfig, e metricsql.Expr) ([]*timeseries, error) {
 		go func() {
 			defer wg.Done()
 			ecCopy := newEvalConfig(ec)
-			tss, err := evalExpr(ecCopy, be.Right)
+			tss, err := EvalExpr(ecCopy, be.Right)
 			mu.Lock()
 			if err != nil {
 				if errGlobal == nil {
@@ -437,7 +437,7 @@ func tryGetArgRollupFuncWithMetricExpr(ae *metricsql.AggrFuncExpr) (*metricsql.F
 func evalExprs(ec *EvalConfig, es []metricsql.Expr) ([][]*timeseries, error) {
 	var rvs [][]*timeseries
 	for _, e := range es {
-		rv, err := evalExpr(ec, e)
+		rv, err := EvalExpr(ec, e)
 		if err != nil {
 			return nil, err
 		}
@@ -459,7 +459,7 @@ func evalRollupFuncArgs(ec *EvalConfig, fe *metricsql.FuncExpr) ([]interface{}, 
 			args[i] = re
 			continue
 		}
-		ts, err := evalExpr(ec, arg)
+		ts, err := EvalExpr(ec, arg)
 		if err != nil {
 			return nil, nil, fmt.Errorf("cannot evaluate arg #%d for %q: %w", i+1, fe.AppendString(nil), err)
 		}
@@ -565,7 +565,7 @@ func evalRollupFuncWithSubquery(ec *EvalConfig, funcName string, rf rollupFunc, 
 	}
 	// unconditionally align start and end args to step for subquery as Prometheus does.
 	ecSQ.Start, ecSQ.End = alignStartEnd(ecSQ.Start, ecSQ.End, ecSQ.Step)
-	tssSQ, err := evalExpr(ecSQ, re.Expr)
+	tssSQ, err := EvalExpr(ecSQ, re.Expr)
 	if err != nil {
 		return nil, err
 	}

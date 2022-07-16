@@ -32,18 +32,18 @@ import (
 )
 
 var (
-	latencyOffset = flag.Duration("search.latencyOffset", time.Second*30, "The time when data points become visible in query results after the collection. "+
+	LatencyOffset = flag.Duration("search.LatencyOffset", time.Second*30, "The time when data points become visible in query results after the collection. "+
 		"Too small value can result in incomplete last points for query results")
 	maxQueryLen = flagutil.NewBytes("search.maxQueryLen", 16*1024, "The maximum search query length in bytes")
-	maxLookback = flag.Duration("search.maxLookback", 0, "Synonym to -search.lookback-delta from Prometheus. "+
+	MaxLookback = flag.Duration("search.MaxLookback", 0, "Synonym to -search.lookback-delta from Prometheus. "+
 		"The value is dynamically detected from interval between time series datapoints if not set. It can be overridden on per-query basis via max_lookback arg. "+
-		"See also '-search.maxStalenessInterval' flag, which has the same meaining due to historical reasons")
-	maxStalenessInterval = flag.Duration("search.maxStalenessInterval", 0, "The maximum interval for staleness calculations. "+
+		"See also '-search.MaxStalenessInterval' flag, which has the same meaining due to historical reasons")
+	MaxStalenessInterval = flag.Duration("search.MaxStalenessInterval", 0, "The maximum interval for staleness calculations. "+
 		"By default it is automatically calculated from the median interval between samples. This flag could be useful for tuning "+
 		"Prometheus data model closer to Influx-style data model. See https://prometheus.io/docs/prometheus/latest/querying/basics/#staleness for details. "+
-		"See also '-search.maxLookback' flag, which has the same meaning due to historical reasons")
-	maxStepForPointsAdjustment = flag.Duration("search.maxStepForPointsAdjustment", time.Minute, "The maximum step when /api/v1/query_range handler adjusts "+
-		"points with timestamps closer than -search.latencyOffset to the current time. The adjustment is needed because such points may contain incomplete data")
+		"See also '-search.MaxLookback' flag, which has the same meaning due to historical reasons")
+	MaxStepForPointsAdjustment = flag.Duration("search.maxStepForPointsAdjustment", time.Minute, "The maximum step when /api/v1/query_range handler adjusts "+
+		"points with timestamps closer than -search.LatencyOffset to the current time. The adjustment is needed because such points may contain incomplete data")
 	selectNodes = flagutil.NewArray("selectNode", "Comma-serparated addresses of vmselect nodes; usage: -selectNode=vmselect-host1,...,vmselect-hostN")
 )
 
@@ -156,16 +156,16 @@ func ExportCSVHandler(startTime time.Time, at *auth.Token, w http.ResponseWriter
 			if err := b.UnmarshalData(); err != nil {
 				return fmt.Errorf("cannot unmarshal block during export: %s", err)
 			}
-			xb := exportBlockPool.Get().(*exportBlock)
-			xb.mn = mn
-			xb.timestamps, xb.values = b.AppendRowsWithTimeRangeFilter(xb.timestamps[:0], xb.values[:0], tr)
-			if len(xb.timestamps) > 0 {
+			xb := ExportBlockPool.Get().(*ExportBlock)
+			xb.Mn = mn
+			xb.Timestamps, xb.Values = b.AppendRowsWithTimeRangeFilter(xb.Timestamps[:0], xb.Values[:0], tr)
+			if len(xb.Timestamps) > 0 {
 				bb := quicktemplate.AcquireByteBuffer()
 				WriteExportCSVLine(bb, xb, fieldNames)
 				resultsCh <- bb
 			}
-			xb.reset()
-			exportBlockPool.Put(xb)
+			xb.Reset()
+			ExportBlockPool.Put(xb)
 			return nil
 		})
 		close(resultsCh)
@@ -305,7 +305,7 @@ var exportDuration = metrics.NewSummary(`vm_request_duration_seconds{path="/api/
 func exportHandler(at *auth.Token, w http.ResponseWriter, r *http.Request, matches []string, etf []storage.TagFilter, start, end int64,
 	format string, maxRowsPerLine int, reduceMemUsage bool, deadline searchutils.Deadline) error {
 	writeResponseFunc := WriteExportStdResponse
-	writeLineFunc := func(xb *exportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
+	writeLineFunc := func(xb *ExportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
 		bb := quicktemplate.AcquireByteBuffer()
 		WriteExportJSONLine(bb, xb)
 		resultsCh <- bb
@@ -313,14 +313,14 @@ func exportHandler(at *auth.Token, w http.ResponseWriter, r *http.Request, match
 	contentType := "application/stream+json; charset=utf-8"
 	if format == "prometheus" {
 		contentType = "text/plain; charset=utf-8"
-		writeLineFunc = func(xb *exportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
+		writeLineFunc = func(xb *ExportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
 			bb := quicktemplate.AcquireByteBuffer()
 			WriteExportPrometheusLine(bb, xb)
 			resultsCh <- bb
 		}
 	} else if format == "promapi" {
 		writeResponseFunc = WriteExportPromAPIResponse
-		writeLineFunc = func(xb *exportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
+		writeLineFunc = func(xb *ExportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
 			bb := quicktemplate.AcquireByteBuffer()
 			WriteExportPromAPILine(bb, xb)
 			resultsCh <- bb
@@ -328,9 +328,9 @@ func exportHandler(at *auth.Token, w http.ResponseWriter, r *http.Request, match
 	}
 	if maxRowsPerLine > 0 {
 		writeLineFuncOrig := writeLineFunc
-		writeLineFunc = func(xb *exportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
-			valuesOrig := xb.values
-			timestampsOrig := xb.timestamps
+		writeLineFunc = func(xb *ExportBlock, resultsCh chan<- *quicktemplate.ByteBuffer) {
+			valuesOrig := xb.Values
+			timestampsOrig := xb.Timestamps
 			values := valuesOrig
 			timestamps := timestampsOrig
 			for len(values) > 0 {
@@ -347,12 +347,12 @@ func exportHandler(at *auth.Token, w http.ResponseWriter, r *http.Request, match
 					values = nil
 					timestamps = nil
 				}
-				xb.values = valuesChunk
-				xb.timestamps = timestampsChunk
+				xb.Values = valuesChunk
+				xb.Timestamps = timestampsChunk
 				writeLineFuncOrig(xb, resultsCh)
 			}
-			xb.values = valuesOrig
-			xb.timestamps = timestampsOrig
+			xb.Values = valuesOrig
+			xb.Timestamps = timestampsOrig
 		}
 	}
 
@@ -381,13 +381,13 @@ func exportHandler(at *auth.Token, w http.ResponseWriter, r *http.Request, match
 				if err := bw.Error(); err != nil {
 					return err
 				}
-				xb := exportBlockPool.Get().(*exportBlock)
-				xb.mn = &rs.MetricName
-				xb.timestamps = rs.Timestamps
-				xb.values = rs.Values
+				xb := ExportBlockPool.Get().(*ExportBlock)
+				xb.Mn = &rs.MetricName
+				xb.Timestamps = rs.Timestamps
+				xb.Values = rs.Values
 				writeLineFunc(xb, resultsCh)
-				xb.reset()
-				exportBlockPool.Put(xb)
+				xb.Reset()
+				ExportBlockPool.Put(xb)
 				return nil
 			})
 			close(resultsCh)
@@ -402,14 +402,14 @@ func exportHandler(at *auth.Token, w http.ResponseWriter, r *http.Request, match
 				if err := b.UnmarshalData(); err != nil {
 					return fmt.Errorf("cannot unmarshal block during export: %s", err)
 				}
-				xb := exportBlockPool.Get().(*exportBlock)
-				xb.mn = mn
-				xb.timestamps, xb.values = b.AppendRowsWithTimeRangeFilter(xb.timestamps[:0], xb.values[:0], tr)
-				if len(xb.timestamps) > 0 {
+				xb := ExportBlockPool.Get().(*ExportBlock)
+				xb.Mn = mn
+				xb.Timestamps, xb.Values = b.AppendRowsWithTimeRangeFilter(xb.Timestamps[:0], xb.Values[:0], tr)
+				if len(xb.Timestamps) > 0 {
 					writeLineFunc(xb, resultsCh)
 				}
-				xb.reset()
-				exportBlockPool.Put(xb)
+				xb.Reset()
+				ExportBlockPool.Put(xb)
 				return nil
 			})
 			close(resultsCh)
@@ -429,21 +429,21 @@ func exportHandler(at *auth.Token, w http.ResponseWriter, r *http.Request, match
 	return nil
 }
 
-type exportBlock struct {
-	mn         *storage.MetricName
-	timestamps []int64
-	values     []float64
+type ExportBlock struct {
+	Mn         *storage.MetricName
+	Timestamps []int64
+	Values     []float64
 }
 
-func (xb *exportBlock) reset() {
-	xb.mn = nil
-	xb.timestamps = xb.timestamps[:0]
-	xb.values = xb.values[:0]
+func (xb *ExportBlock) Reset() {
+	xb.Mn = nil
+	xb.Timestamps = xb.Timestamps[:0]
+	xb.Values = xb.Values[:0]
 }
 
-var exportBlockPool = &sync.Pool{
+var ExportBlockPool = &sync.Pool{
 	New: func() interface{} {
-		return &exportBlock{}
+		return &ExportBlock{}
 	},
 }
 
@@ -584,7 +584,7 @@ func LabelValuesHandler(startTime time.Time, at *auth.Token, labelName string, w
 		if err != nil {
 			return err
 		}
-		labelValues, isPartial, err = labelValuesWithMatches(at, denyPartialResponse, labelName, matches, etf, start, end, deadline)
+		labelValues, isPartial, err = LabelValuesWithMatches(at, denyPartialResponse, labelName, matches, etf, start, end, deadline)
 		if err != nil {
 			return fmt.Errorf("cannot obtain label values for %q, match[]=%q, start=%d, end=%d: %w", labelName, matches, start, end, err)
 		}
@@ -600,7 +600,7 @@ func LabelValuesHandler(startTime time.Time, at *auth.Token, labelName string, w
 	return nil
 }
 
-func labelValuesWithMatches(at *auth.Token, denyPartialResponse bool, labelName string, matches []string, etf []storage.TagFilter,
+func LabelValuesWithMatches(at *auth.Token, denyPartialResponse bool, labelName string, matches []string, etf []storage.TagFilter,
 	start, end int64, deadline searchutils.Deadline) ([]string, bool, error) {
 	tagFilterss, err := getTagFilterssFromMatches(matches)
 	if err != nil {
@@ -1232,16 +1232,16 @@ func queryRangeHandler(startTime time.Time, at *auth.Token, w http.ResponseWrite
 	if err != nil {
 		return fmt.Errorf("cannot execute query: %w", err)
 	}
-	if step < maxStepForPointsAdjustment.Milliseconds() {
+	if step < MaxStepForPointsAdjustment.Milliseconds() {
 		queryOffset := getLatencyOffsetMilliseconds()
 		if ct-queryOffset < end {
-			result = adjustLastPoints(result, ct-queryOffset, ct+step)
+			result = AdjustLastPoints(result, ct-queryOffset, ct+step)
 		}
 	}
 
 	// Remove NaN values as Prometheus does.
 	// See https://github.com/VictoriaMetrics/VictoriaMetrics/issues/153
-	result = removeEmptyValuesAndTimeseries(result)
+	result = RemoveEmptyValuesAndTimeseries(result)
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	bw := bufferedwriter.Get(w)
@@ -1253,7 +1253,7 @@ func queryRangeHandler(startTime time.Time, at *auth.Token, w http.ResponseWrite
 	return nil
 }
 
-func removeEmptyValuesAndTimeseries(tss []netstorage.Result) []netstorage.Result {
+func RemoveEmptyValuesAndTimeseries(tss []netstorage.Result) []netstorage.Result {
 	dst := tss[:0]
 	for i := range tss {
 		ts := &tss[i]
@@ -1296,9 +1296,9 @@ var queryRangeDuration = metrics.NewSummary(`vm_request_duration_seconds{path="/
 
 var nan = math.NaN()
 
-// adjustLastPoints substitutes the last point values on the time range (start..end]
+// AdjustLastPoints substitutes the last point values on the time range (start..end]
 // with the previous point values, since these points may contain incomplete values.
-func adjustLastPoints(tss []netstorage.Result, start, end int64) []netstorage.Result {
+func AdjustLastPoints(tss []netstorage.Result, start, end int64) []netstorage.Result {
 	for i := range tss {
 		ts := &tss[i]
 		values := ts.Values
@@ -1327,9 +1327,9 @@ func adjustLastPoints(tss []netstorage.Result, start, end int64) []netstorage.Re
 }
 
 func getMaxLookback(r *http.Request) (int64, error) {
-	d := maxLookback.Milliseconds()
+	d := MaxLookback.Milliseconds()
 	if d == 0 {
-		d = maxStalenessInterval.Milliseconds()
+		d = MaxStalenessInterval.Milliseconds()
 	}
 	return searchutils.GetDuration(r, "max_lookback", d)
 }
@@ -1395,7 +1395,7 @@ func getRoundDigits(r *http.Request) int {
 }
 
 func getLatencyOffsetMilliseconds() int64 {
-	d := latencyOffset.Milliseconds()
+	d := LatencyOffset.Milliseconds()
 	if d <= 1000 {
 		d = 1000
 	}

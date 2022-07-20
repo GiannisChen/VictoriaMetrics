@@ -64,9 +64,6 @@ func getDefaultMaxConcurrentRequests() int {
 func main() {
 	// Write flags and help message to stdout, since it is easier to grep or pipe.
 
-	// test
-	os.Args = append(os.Args, "-storageNode=127.0.0.1")
-	// end-test
 	flag.CommandLine.SetOutput(os.Stdout)
 	flag.Usage = usage
 	envflag.Parse()

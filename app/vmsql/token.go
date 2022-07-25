@@ -39,7 +39,7 @@ type Tokenizer struct {
 
 	lastToken      string
 	posVarIndex    int
-	partialDDL     Statement
+	PartialDDL     Statement
 	nesting        int
 	multi          bool
 	specialComment *Tokenizer
@@ -76,7 +76,7 @@ func (tkn *Tokenizer) Lex(lval *yySymType) int {
 		// we should not accept partially parsed DDLs. They
 		// should instead result in parser errors. See the
 		// Parse function to see how this is handled.
-		tkn.partialDDL = nil
+		tkn.PartialDDL = nil
 	}
 	lval.str = val
 	tkn.lastToken = val
@@ -680,7 +680,7 @@ func (tkn *Tokenizer) peek(dist int) uint16 {
 // reset clears any internal state.
 func (tkn *Tokenizer) reset() {
 	tkn.ParseTree = nil
-	tkn.partialDDL = nil
+	tkn.PartialDDL = nil
 	tkn.specialComment = nil
 	tkn.posVarIndex = 0
 	tkn.nesting = 0

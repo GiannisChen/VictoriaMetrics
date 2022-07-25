@@ -5,7 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/VictoriaMetrics/VictoriaMetrics/app/vmsql"
+	"github.com/VictoriaMetrics/VictoriaMetrics/app/vmselect/vmsql"
 	"net/http"
 	"os"
 	"strings"

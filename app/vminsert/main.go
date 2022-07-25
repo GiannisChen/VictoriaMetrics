@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/VictoriaMetrics/VictoriaMetrics/app/vminsert/vmsql"
 	"io"
 	"net"
 	"net/http"
@@ -68,6 +69,8 @@ var (
 
 func main() {
 	// Write flags and help message to stdout, since it is easier to grep or pipe.
+	//os.Args = append(os.Args, "-storageNode=127.0.0.1")
+
 	flag.CommandLine.SetOutput(os.Stdout)
 	flag.Usage = usage
 	envflag.Parse()
@@ -276,6 +279,15 @@ func requestHandler(w http.ResponseWriter, r *http.Request) bool {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		fmt.Fprintf(w, `{}`)
 		return true
+	case "api/v1/sql":
+		sqlInsertRequests.Inc()
+		if err := vmsql.SQLInsertHandler(at, r); err != nil {
+			sqlInsertErrors.Inc()
+			httpserver.Errorf(w, r, "%s", err)
+			return true
+		}
+		w.WriteHeader(http.StatusNoContent)
+		return true
 	default:
 		// This is not our link
 		return false
@@ -311,6 +323,9 @@ var (
 	datadogValidateRequests = metrics.NewCounter(`vm_http_requests_total{path="/insert/{}/datadog/api/v1/validate", protocol="datadog"}`)
 	datadogCheckRunRequests = metrics.NewCounter(`vm_http_requests_total{path="/insert/{}/datadog/api/v1/check_run", protocol="datadog"}`)
 	datadogIntakeRequests   = metrics.NewCounter(`vm_http_requests_total{path="/insert/{}/datadog/intake/", protocol="datadog"}`)
+
+	sqlInsertRequests = metrics.NewCounter(`vm_http_requests_total{path="/insert/{}/api/v1/sql", protocol="sql"}`)
+	sqlInsertErrors   = metrics.NewCounter(`vm_http_request_errors_total{path="/insert/{}/api/v1/sql", protocol="sql"}`)
 
 	_ = metrics.NewGauge(`vm_metrics_with_dropped_labels_total`, func() float64 {
 		return float64(atomic.LoadUint64(&storage.MetricsWithDroppedLabels))

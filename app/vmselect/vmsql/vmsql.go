@@ -8,6 +8,7 @@ import (
 	"github.com/VictoriaMetrics/VictoriaMetrics/app/vmselect/prometheus"
 	"github.com/VictoriaMetrics/VictoriaMetrics/app/vmselect/promql"
 	"github.com/VictoriaMetrics/VictoriaMetrics/app/vmselect/searchutils"
+	"github.com/VictoriaMetrics/VictoriaMetrics/app/vmsql"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/auth"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/cgroup"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/httpserver"
@@ -37,7 +38,7 @@ const defaultStep = 5 * 60 * 1000
 func SQLSelectHandler(startTime time.Time, at *auth.Token, w http.ResponseWriter, r *http.Request) error {
 	defer sqlSelectDuration.UpdateDuration(startTime)
 
-	sql, rem, err := SplitStatement(r.FormValue("sql"))
+	sql, rem, err := vmsql.SplitStatement(r.FormValue("sql"))
 	if err != nil {
 		return err
 	}
@@ -47,13 +48,13 @@ func SQLSelectHandler(startTime time.Time, at *auth.Token, w http.ResponseWriter
 	if len(strings.TrimSpace(rem)) != 0 {
 		return fmt.Errorf("unsupported multi-sql")
 	}
-	tokenizer := NewStringTokenizer(sql)
-	if yyParsePooled(tokenizer) != 0 {
-		if tokenizer.partialDDL != nil {
+	tokenizer := vmsql.NewStringTokenizer(sql)
+	if vmsql.YyParsePooled(tokenizer) != 0 {
+		if tokenizer.PartialDDL != nil {
 			if typ, val := tokenizer.Scan(); typ != 0 {
 				return fmt.Errorf("extra characters encountered after end of DDL: '%s'", val)
 			}
-			tokenizer.ParseTree = tokenizer.partialDDL
+			tokenizer.ParseTree = tokenizer.PartialDDL
 		}
 	}
 	if tokenizer.LastError != nil {
@@ -65,23 +66,23 @@ func SQLSelectHandler(startTime time.Time, at *auth.Token, w http.ResponseWriter
 
 	switch tokenizer.ParseTree.Type() {
 	case "SELECT":
-		return selectHandler(tokenizer.ParseTree.(*SelectStatement), startTime, w, r, at)
+		return selectHandler(tokenizer.ParseTree.(*vmsql.SelectStatement), startTime, w, r, at)
 	case "CREATE":
-		return createHandler(tokenizer.ParseTree.(*CreateStatement), startTime, w, r, at)
+		return createHandler(tokenizer.ParseTree.(*vmsql.CreateStatement), startTime, w, r, at)
 	case "DELETE":
-		return deleteHandler(tokenizer.ParseTree.(*DeleteStatement), startTime, w, r, at)
+		return deleteHandler(tokenizer.ParseTree.(*vmsql.DeleteStatement), startTime, w, r, at)
 	case "DROP":
-		return dropHandler(tokenizer.ParseTree.(*DropStatement), startTime, w, r, at)
+		return dropHandler(tokenizer.ParseTree.(*vmsql.DropStatement), startTime, w, r, at)
 	case "DESCRIBE":
-		return describeHandler(tokenizer.ParseTree.(*DescribeStatement), startTime, w, r, at)
+		return describeHandler(tokenizer.ParseTree.(*vmsql.DescribeStatement), startTime, w, r, at)
 	default:
 		return fmt.Errorf("unsupported sql type")
 	}
 }
 
-func selectHandler(stmt *SelectStatement, startTime time.Time, w http.ResponseWriter, r *http.Request, at *auth.Token) error {
+func selectHandler(stmt *vmsql.SelectStatement, startTime time.Time, w http.ResponseWriter, r *http.Request, at *auth.Token) error {
 	defer sqlSelectDuration.UpdateDuration(startTime)
-	table, err := Get(context.Background(), stmt.TableName)
+	table, err := vmsql.Get(context.Background(), stmt.TableName)
 	if err != nil {
 		return err
 	}
@@ -89,7 +90,7 @@ func selectHandler(stmt *SelectStatement, startTime time.Time, w http.ResponseWr
 		return fmt.Errorf("cannot find table %s", stmt.TableName)
 	}
 
-	isTag, expr, err := TransSelectStatement(stmt, table)
+	isTag, expr, err := vmsql.TransSelectStatement(stmt, table)
 	if err != nil {
 		return err
 	}
@@ -280,10 +281,10 @@ func selectHandler(stmt *SelectStatement, startTime time.Time, w http.ResponseWr
 	return nil
 }
 
-func createHandler(stmt *CreateStatement, startTime time.Time, w http.ResponseWriter, r *http.Request, at *auth.Token) error {
+func createHandler(stmt *vmsql.CreateStatement, startTime time.Time, w http.ResponseWriter, r *http.Request, at *auth.Token) error {
 	defer sqlCreateDuration.UpdateDuration(startTime)
 
-	if _, err := Get(context.Background(), stmt.CreateTable.TableName); err == nil {
+	if _, err := vmsql.Get(context.Background(), stmt.CreateTable.TableName); err == nil {
 		if stmt.IfNotExists {
 			w.Header().Set("Content-Type", "application/json")
 			if _, err := w.Write([]byte(`{"message":"create success"}`)); err != nil {
@@ -294,7 +295,7 @@ func createHandler(stmt *CreateStatement, startTime time.Time, w http.ResponseWr
 			return fmt.Errorf("table already exists")
 		}
 	}
-	if _, err := Put(context.Background(), stmt.CreateTable.TableName, ""); err != nil {
+	if _, err := vmsql.Put(context.Background(), stmt.CreateTable.TableName, ""); err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -304,10 +305,10 @@ func createHandler(stmt *CreateStatement, startTime time.Time, w http.ResponseWr
 	return nil
 }
 
-func deleteHandler(stmt *DeleteStatement, startTime time.Time, w http.ResponseWriter, r *http.Request, at *auth.Token) error {
+func deleteHandler(stmt *vmsql.DeleteStatement, startTime time.Time, w http.ResponseWriter, r *http.Request, at *auth.Token) error {
 	defer sqlDeleteDuration.UpdateDuration(startTime)
 
-	table, err := Get(context.Background(), stmt.TableName)
+	table, err := vmsql.Get(context.Background(), stmt.TableName)
 	if err != nil {
 		return err
 	}
@@ -347,9 +348,9 @@ func deleteHandler(stmt *DeleteStatement, startTime time.Time, w http.ResponseWr
 	return nil
 }
 
-func dropHandler(stmt *DropStatement, startTime time.Time, w http.ResponseWriter, r *http.Request, at *auth.Token) error {
+func dropHandler(stmt *vmsql.DropStatement, startTime time.Time, w http.ResponseWriter, r *http.Request, at *auth.Token) error {
 	defer sqlDropDuration.UpdateDuration(startTime)
-	table, err := Get(context.Background(), stmt.TableName)
+	table, err := vmsql.Get(context.Background(), stmt.TableName)
 	if err != nil || table == nil {
 		if stmt.IfExists {
 			w.Header().Set("Content-Type", "application/json")
@@ -377,17 +378,17 @@ func dropHandler(stmt *DropStatement, startTime time.Time, w http.ResponseWriter
 	if deletedCount > 0 {
 		promql.ResetRollupResultCache()
 	}
-	if err := Delete(context.Background(), stmt.TableName); err != nil {
+	if err := vmsql.Delete(context.Background(), stmt.TableName); err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
 	return nil
 }
 
-func describeHandler(stmt *DescribeStatement, startTime time.Time, w http.ResponseWriter, r *http.Request, at *auth.Token) error {
+func describeHandler(stmt *vmsql.DescribeStatement, startTime time.Time, w http.ResponseWriter, r *http.Request, at *auth.Token) error {
 	defer sqlDescribeDuration.UpdateDuration(startTime)
 
-	table, err := Get(context.Background(), stmt.TableName)
+	table, err := vmsql.Get(context.Background(), stmt.TableName)
 	if err != nil {
 		return err
 	}
@@ -403,10 +404,10 @@ func describeHandler(stmt *DescribeStatement, startTime time.Time, w http.Respon
 	return nil
 }
 
-func selectTagHandler(expr metricsql.Expr, stmt *SelectStatement, w http.ResponseWriter, r *http.Request, startTime time.Time, at *auth.Token) error {
+func selectTagHandler(expr metricsql.Expr, stmt *vmsql.SelectStatement, w http.ResponseWriter, r *http.Request, startTime time.Time, at *auth.Token) error {
 	switch expr.(type) {
-	case *MetricsExpr:
-		if expr.(*MetricsExpr) == nil {
+	case *vmsql.MetricsExpr:
+		if expr.(*vmsql.MetricsExpr) == nil {
 			return fmt.Errorf("SELECT: synatx error")
 		}
 		deadline := searchutils.GetDeadlineForExport(r, startTime)
@@ -436,7 +437,7 @@ func selectTagHandler(expr metricsql.Expr, stmt *SelectStatement, w http.Respons
 				MaxTimestamp: end,
 			}
 
-			for i, column := range expr.(*MetricsExpr).Columns {
+			for i, column := range expr.(*vmsql.MetricsExpr).Columns {
 				if i != 0 {
 					if _, err := bw.Write([]byte(",\n")); err != nil {
 						return err
@@ -470,7 +471,7 @@ func selectTagHandler(expr metricsql.Expr, stmt *SelectStatement, w http.Respons
 	}
 }
 
-func getEvalConfig(stmt *SelectStatement, r *http.Request, startTime time.Time, at *auth.Token) (*promql.EvalConfig, error) {
+func getEvalConfig(stmt *vmsql.SelectStatement, r *http.Request, startTime time.Time, at *auth.Token) (*promql.EvalConfig, error) {
 	deadline := searchutils.GetDeadlineForQuery(r, startTime)
 	mayCache := !searchutils.GetBool(r, "nocache")
 	lookbackDelta, err := getMaxLookback(r)
@@ -598,7 +599,7 @@ func getTagFilterssFromLabelFilters(lfs []*metricsql.LabelFilter) []storage.TagF
 	return tagFilterss
 }
 
-func getTagFilterssFromTable(table *Table) ([][]storage.TagFilter, error) {
+func getTagFilterssFromTable(table *vmsql.Table) ([][]storage.TagFilter, error) {
 	metricTagFilter := storage.TagFilter{}
 	tagFilterss := make([][]storage.TagFilter, 1)
 	for _, column := range table.Columns {
@@ -626,7 +627,7 @@ func getTagFilterssFromTable(table *Table) ([][]storage.TagFilter, error) {
 	}
 }
 
-func getTagFilterssFromDeleteStmt(stmt *DeleteStatement, table *Table) ([][]storage.TagFilter, error) {
+func getTagFilterssFromDeleteStmt(stmt *vmsql.DeleteStatement, table *vmsql.Table) ([][]storage.TagFilter, error) {
 
 	metricFilter := storage.TagFilter{}
 	columnTagMap := make(map[string][]*storage.TagFilter)

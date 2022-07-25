@@ -15,7 +15,7 @@ func setParseTree(yylex yyLexer, stmt Statement) {
 }
 
 func setDDL(yylex yyLexer, node Statement) {
-	yylex.(*Tokenizer).partialDDL = node
+	yylex.(*Tokenizer).PartialDDL = node
 }
 
 func incNesting(yylex yyLexer) bool {

@@ -68,9 +68,9 @@ var (
 )
 
 func main() {
+	// Warning: debug add args, MUST remove when build.
+	// os.Args = append(os.Args, "-storageNode=127.0.0.1")
 	// Write flags and help message to stdout, since it is easier to grep or pipe.
-	//os.Args = append(os.Args, "-storageNode=127.0.0.1")
-
 	flag.CommandLine.SetOutput(os.Stdout)
 	flag.Usage = usage
 	envflag.Parse()

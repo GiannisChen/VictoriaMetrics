@@ -583,7 +583,7 @@ func StreamListAlerts(qw422016 *qt422016.Writer, groupAlerts []GroupAlerts) {
                         <thead>
                             <tr>
                                 <th scope="col">Labels</th>
-                                <th scope="col">State</th>
+                                <th scope="col">GetState</th>
                                 <th scope="col">Active at</th>
                                 <th scope="col">Value</th>
                                 <th scope="col">Link</th>

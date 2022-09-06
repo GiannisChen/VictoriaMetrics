@@ -46,7 +46,7 @@ func Test_parseNodes(t *testing.T) {
       }
     },
     "Status": {
-      "State": "ready",
+      "GetState": "ready",
       "Addr": "172.31.40.97"
     }
   }

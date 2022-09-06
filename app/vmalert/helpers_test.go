@@ -237,7 +237,7 @@ func compareAlerts(t *testing.T, as, bs []notifier.Alert) {
 			t.Fatalf("expected t have Name %q; got %q", a.Name, b.Name)
 		}
 		if a.State != b.State {
-			t.Fatalf("expected t have State %q; got %q", a.State, b.State)
+			t.Fatalf("expected t have GetState %q; got %q", a.State, b.State)
 		}
 		if a.Value != b.Value {
 			t.Fatalf("expected t have Value %f; got %f", a.Value, b.Value)

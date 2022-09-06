@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/VictoriaMetrics/VictoriaMetrics/app/vmselect/vmsql"
+	vmsqlserver "github.com/VictoriaMetrics/VictoriaMetrics/app/vmsql/driver"
 	"net/http"
 	"os"
 	"strings"
@@ -47,6 +48,11 @@ var (
 
 var slowQueries = metrics.NewCounter(`vm_slow_queries_total`)
 
+var (
+	vmsqlSelectServer     *vmsqlserver.Server
+	vmsqlSelectListenAddr = flag.String("vmsqlSelectListenAddr", "", "TCP address to listen for MySQL protocol data except insert(JDBC only right now). Usually :3306 must be set. Doesn't work if empty")
+)
+
 func getDefaultMaxConcurrentRequests() int {
 	n := cgroup.AvailableCPUs()
 	if n <= 4 {
@@ -62,8 +68,10 @@ func getDefaultMaxConcurrentRequests() int {
 }
 
 func main() {
+	// Warning: debug add args, MUST remove when build.
+	os.Args = append(os.Args, "-storageNode=127.0.0.1")
+	os.Args = append(os.Args, "-vmsqlSelectListenAddr=3306")
 	// Write flags and help message to stdout, since it is easier to grep or pipe.
-
 	flag.CommandLine.SetOutput(os.Stdout)
 	flag.Usage = usage
 	envflag.Parse()
@@ -78,6 +86,10 @@ func main() {
 	}
 	netstorage.InitStorageNodes(*storageNodes)
 	logger.Infof("started netstorage in %.3f seconds", time.Since(startTime).Seconds())
+
+	if len(*vmsqlSelectListenAddr) > 0 {
+		vmsqlSelectServer = vmsqlserver.MustStart(*vmsqlSelectListenAddr, "vmsql")
+	}
 
 	if len(*cacheDataPath) > 0 {
 		tmpDataPath := *cacheDataPath + "/tmp"
@@ -103,6 +115,10 @@ func main() {
 		logger.Fatalf("cannot stop http service: %s", err)
 	}
 	logger.Infof("successfully shut down http service in %.3f seconds", time.Since(startTime).Seconds())
+
+	if len(*vmsqlSelectListenAddr) > 0 {
+		vmsqlSelectServer.MustStop()
+	}
 
 	logger.Infof("shutting down neststorage...")
 	startTime = time.Now()

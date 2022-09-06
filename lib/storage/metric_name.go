@@ -365,6 +365,19 @@ func (mn *MetricName) String() string {
 	return fmt.Sprintf("AccountID=%d, ProjectID=%d, %s{%s}", mnCopy.AccountID, mnCopy.ProjectID, mnCopy.MetricGroup, tagsStr)
 }
 
+// TagsOnlyString returns sorted tags of the metric name.
+func (mn *MetricName) TagsOnlyString() string {
+	var mnCopy MetricName
+	mnCopy.CopyFrom(mn)
+	mnCopy.sortTags()
+	var tags []string
+	for i := range mnCopy.Tags {
+		t := &mnCopy.Tags[i]
+		tags = append(tags, fmt.Sprintf("%s=%q", t.Key, t.Value))
+	}
+	return strings.Join(tags, ",")
+}
+
 // Marshal appends marshaled mn to dst and returns the result.
 //
 // mn.sortTags must be called before calling this function

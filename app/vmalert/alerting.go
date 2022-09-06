@@ -480,7 +480,7 @@ func alertForToTimeSeries(name string, a *notifier.Alert, timestamp int64) promp
 }
 
 // Restore restores the state of active alerts basing on previously written timeseries.
-// Restore restores only Start field. Field State will be always Pending and supposed
+// Restore restores only Start field. Field GetState will be always Pending and supposed
 // to be updated on next Exec, as well as Value field.
 // Only rules with For > 0 will be restored.
 func (ar *AlertingRule) Restore(ctx context.Context, q datasource.Querier, lookback time.Duration, labels map[string]string) error {

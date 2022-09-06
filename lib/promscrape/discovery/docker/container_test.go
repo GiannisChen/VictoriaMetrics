@@ -42,7 +42,7 @@ func Test_parseContainers(t *testing.T) {
       "com.docker.compose.service": "crow-server",
       "com.docker.compose.version": "1.11.2"
     },
-    "State": "running",
+    "GetState": "running",
     "Status": "Up 2 hours",
     "HostConfig": {
       "NetworkMode": "bridge"
@@ -89,7 +89,7 @@ func Test_parseContainers(t *testing.T) {
       "com.docker.compose.service": "crow-web",
       "com.docker.compose.version": "1.11.2"
     },
-    "State": "running",
+    "GetState": "running",
     "Status": "Up 2 months",
     "HostConfig": {
       "NetworkMode": "bridge"

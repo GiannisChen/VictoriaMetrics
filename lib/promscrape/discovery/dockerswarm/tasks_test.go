@@ -53,7 +53,7 @@ func Test_parseTasks(t *testing.T) {
     "Slot": 1,
     "NodeID": "qauwmifceyvqs0sipvzu8oslu",
     "Status": {
-      "State": "running",
+      "GetState": "running",
       "ContainerStatus": {
         "ContainerID": "33034b69f6fa5f808098208752fd1fe4e0e1ca86311988cea6a73b998cdc62e8",
         "ExitCode": 0

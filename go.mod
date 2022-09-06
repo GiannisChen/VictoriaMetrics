@@ -10,7 +10,6 @@ require (
 	github.com/VictoriaMetrics/metrics v1.18.0
 	github.com/VictoriaMetrics/metricsql v0.26.0
 	github.com/aws/aws-sdk-go v1.40.55
-	github.com/bkaradzic/go-lz4 v1.0.0
 	github.com/cespare/xxhash/v2 v2.1.2
 	github.com/cheggaaa/pb/v3 v3.0.8
 	github.com/golang/snappy v0.0.4

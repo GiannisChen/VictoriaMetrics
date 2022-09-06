@@ -9,6 +9,7 @@ import (
 	"github.com/VictoriaMetrics/VictoriaMetrics/app/vmselect/promql"
 	"github.com/VictoriaMetrics/VictoriaMetrics/app/vmselect/searchutils"
 	"github.com/VictoriaMetrics/VictoriaMetrics/app/vmsql"
+	"github.com/VictoriaMetrics/VictoriaMetrics/app/vmsql/common"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/auth"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/cgroup"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/httpserver"
@@ -182,7 +183,7 @@ func selectHandler(stmt *vmsql.SelectStatement, startTime time.Time, w http.Resp
 		default:
 			return fmt.Errorf("SELECT: cannot parse where filter")
 		}
-		tagFilterss, err := getTagFilterssFromExpr(expr.(*metricsql.MetricExpr))
+		tagFilterss, err := common.GetTagFilterssFromExpr(expr.(*metricsql.MetricExpr))
 		sq := storage.NewSearchQuery(at.AccountID, at.ProjectID, start, end, tagFilterss)
 		w.Header().Set("Content-Type", contentType)
 		bw := bufferedwriter.Get(w)
@@ -451,7 +452,7 @@ func selectTagHandler(expr metricsql.Expr, stmt *vmsql.SelectStatement, w http.R
 					labelValues, isPartial, err = netstorage.GetLabelValuesOnTimeRange(at, false, column.Name, tr, deadline)
 				} else {
 					labelValues, isPartial, err = prometheus.LabelValuesWithMatches(at, false,
-						column.Name, []string{}, getTagFilterssFromLabelFilters(column.Metric), start, end, deadline)
+						column.Name, []string{}, common.GetTagFilterssFromLabelFilters(column.Metric), start, end, deadline)
 				}
 				if err != nil {
 					return fmt.Errorf(`cannot obtain label values on time range for %q: %w`, column.Name, err)
@@ -492,7 +493,7 @@ func getEvalConfig(stmt *vmsql.SelectStatement, r *http.Request, startTime time.
 	}
 	endTimestamp := end.UnixMilli()
 
-	step, err := parseInt64(stmt.WhereFilter.TimeFilter.Step, defaultStep)
+	step, err := common.ParseInt64(stmt.WhereFilter.TimeFilter.Step, defaultStep)
 	if err != nil {
 		return nil, err
 	}
@@ -540,63 +541,12 @@ func getRoundDigits(r *http.Request) int {
 	return n
 }
 
-func parseInt64(s string, de int64) (int64, error) {
-	if s != "" {
-		if parseInt, err := strconv.ParseInt(s, 10, 64); err != nil {
-			return 0, err
-		} else {
-			return parseInt, nil
-		}
-	} else {
-		return de, nil
-	}
-}
-
 func getLatencyOffsetMilliseconds() int64 {
 	d := prometheus.LatencyOffset.Milliseconds()
 	if d <= 1000 {
 		d = 1000
 	}
 	return d
-}
-
-func getTagFilterssFromExpr(expr *metricsql.MetricExpr) ([][]storage.TagFilter, error) {
-	tagFilterss := make([][]storage.TagFilter, 1)
-	if expr == nil || expr.LabelFilters == nil || len(expr.LabelFilters) == 0 {
-		return nil, fmt.Errorf("empty filter")
-	}
-	for _, lf := range expr.LabelFilters {
-		if lf.Label == "__name__" {
-			tagFilterss[0] = append(tagFilterss[0], storage.TagFilter{
-				Key:        nil,
-				Value:      []byte(lf.Value),
-				IsNegative: lf.IsNegative,
-				IsRegexp:   lf.IsRegexp,
-			})
-		} else {
-			tagFilterss[0] = append(tagFilterss[0], storage.TagFilter{
-				Key:        []byte(lf.Label),
-				Value:      []byte(lf.Value),
-				IsNegative: lf.IsNegative,
-				IsRegexp:   lf.IsRegexp,
-			})
-		}
-
-	}
-	return tagFilterss, nil
-}
-
-func getTagFilterssFromLabelFilters(lfs []*metricsql.LabelFilter) []storage.TagFilter {
-	var tagFilterss []storage.TagFilter
-	for _, lf := range lfs {
-		tagFilterss = append(tagFilterss, storage.TagFilter{
-			Key:        []byte(lf.Label),
-			Value:      []byte(lf.Value),
-			IsNegative: lf.IsNegative,
-			IsRegexp:   lf.IsRegexp,
-		})
-	}
-	return tagFilterss
 }
 
 func getTagFilterssFromTable(table *vmsql.Table) ([][]storage.TagFilter, error) {

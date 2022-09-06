@@ -11,9 +11,9 @@ func TestTransSelectStatement(t *testing.T) {
 		sql string
 	}{
 		{id: "SELECT_01", sql: `select * from a`},
-		{id: "SELECT_02", sql: `select * from a where city in ("nanjing", "beijing")`},
-		{id: "SELECT_03", sql: `select sum(voltage) from a where timestamp in ['0':'1':10] AND city in ("nanjing", "beijing") AND voltage <= 1 GROUP by city`},
-		{id: "SELECT_04", sql: `select exp(ln(clamp_min(voltage, 5))), max(ln(humidity)), temperature from a where timestamp in ['0':'1':10] AND city in ("nanjing", "beijing") AND voltage <= 1 AND area = "a" OR area = "b" GROUP by city limit 1`},
+		{id: "SELECT_02", sql: `select * from a where city in ("nanjing", "beijing") AND voltage <= 1`},
+		{id: "SELECT_03", sql: `select sum(voltage) from a where timestamp in ["0":"1":1000] AND city in ("nanjing", "beijing") AND voltage <= 1 GROUP by (city)`},
+		{id: "SELECT_04", sql: `select exp(ln(clamp_min(voltage, 5))), max(ln(humidity)), temperature from a where city in ("nanjing", "beijing") AND voltage <= 1 AND area = "a" OR area = "b" GROUP by city limit 1`},
 	}
 
 	table := &Table{
@@ -41,13 +41,13 @@ func TestTransSelectStatement(t *testing.T) {
 				return
 			}
 			tokenizer := NewStringTokenizer(sql)
-			if YyParsePooled(tokenizer) != 0 {
-				if tokenizer.PartialDDL != nil {
+			if yyParsePooled(tokenizer) != 0 {
+				if tokenizer.partialDDL != nil {
 					if typ, val := tokenizer.Scan(); typ != 0 {
 						t.Errorf("extra characters encountered after end of DDL: '%s'", val)
 					}
 					t.Logf("ignoring error parsing DDL '%s': %v", sql, tokenizer.LastError)
-					tokenizer.ParseTree = tokenizer.PartialDDL
+					tokenizer.ParseTree = tokenizer.partialDDL
 				}
 				t.Log(tokenizer.LastError.Error())
 			}

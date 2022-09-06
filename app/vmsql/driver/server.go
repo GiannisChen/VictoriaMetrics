@@ -93,6 +93,8 @@ func (s *Server) ServeTCP() {
 		}
 		id := s.connectionID
 		s.connectionID++
+		s.wg.Add(1)
+		// s.wg.Done() in handle routine.
 		go s.handle(conn, id)
 	}
 	wg.Wait()
@@ -107,7 +109,6 @@ func (s *Server) handle(conn net.Conn, id uint32) {
 		}
 		s.wg.Done()
 	}()
-
 	var err error
 	var data []byte
 	var authPkt []byte
@@ -197,14 +198,6 @@ func (s *Server) handle(conn net.Conn, id uint32) {
 					return
 				}
 			}
-		// COM_STMT_PREPARE
-		//case protocol.COM_STMT_PREPARE:
-		// COM_STMT_EXECUTE
-		//case protocol.COM_STMT_EXECUTE:
-		// COM_STMT_RESET
-		//case protocol.COM_STMT_RESET:
-		// COM_STMT_CLOSE
-		//case protocol.COM_STMT_CLOSE:
 		default:
 			cmd := protocol.CommandString(data[0])
 			logger.Errorf("session.command:%s.not.implemented", cmd)

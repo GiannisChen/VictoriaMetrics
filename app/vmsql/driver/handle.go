@@ -17,7 +17,6 @@ import (
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/storage"
 	"github.com/VictoriaMetrics/metricsql"
 	"github.com/valyala/quicktemplate"
-	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -47,9 +46,9 @@ func parserComQuery(data []byte) string {
 }
 
 func (s *Server) ComQuery(session *Session, query string, callback func(qr protocol.Result) error) error {
-	query = strings.ToLower(query)
-	if strings.HasPrefix(query, "set") {
-		query = "set"
+	var cond *protocol.Cond
+	if cond = handshake(query); cond != nil {
+		return callback(cond.Result)
 	}
 	s.mu.RLock()
 	session = s.ss[session.id]
@@ -81,10 +80,9 @@ func (s *Server) ComQuery(session *Session, query string, callback func(qr proto
 		return fmt.Errorf("parTree empty")
 	}
 
-	var cond *protocol.Cond
 	switch tokenizer.ParseTree.Type() {
 	case "SELECT":
-		s.querySelect(tokenizer.ParseTree.(*vmsql.SelectStatement))
+		cond = s.querySelect(tokenizer.ParseTree.(*vmsql.SelectStatement))
 	case "CREATE":
 		cond = s.queryCreate(tokenizer.ParseTree.(*vmsql.CreateStatement))
 	case "DELETE":
@@ -111,7 +109,7 @@ func (s *Server) ComQuery(session *Session, query string, callback func(qr proto
 		case protocol.COND_ERROR:
 			return cond.Error
 		case protocol.COND_PANIC:
-			log.Panic("vmsql handler panic....")
+			logger.Panicf("vmsql handler panic....")
 		case protocol.COND_NORMAL:
 			return callback(cond.Result)
 		}
@@ -120,7 +118,7 @@ func (s *Server) ComQuery(session *Session, query string, callback func(qr proto
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return fmt.Errorf("vmsql query[%v] error[can not found the cond please set first]", query)
+	return fmt.Errorf("vmsql query[%v] error", query)
 }
 
 func (s *Server) querySelect(stmt *vmsql.SelectStatement) *protocol.Cond {
@@ -273,7 +271,9 @@ func (s *Server) querySelect(stmt *vmsql.SelectStatement) *protocol.Cond {
 				startTime.UnixNano()/1e6+evalConfig.Step)
 		}
 	}
-
+	// Remove NaN values as Prometheus does.
+	// See https://github.com/VictoriaMetrics/VictoriaMetrics/issues/153
+	result = prometheus.RemoveEmptyValuesAndTimeseries(result)
 	return cond.SetResult(ResultConvert(stmt, table, result))
 }
 
@@ -398,4 +398,29 @@ func ResultConvert(stmt *vmsql.SelectStatement, table *vmsql.Table, res []netsto
 	}
 
 	return r
+}
+
+func handshake(query string) *protocol.Cond {
+	query = strings.ToLower(query)
+	if idx := strings.IndexByte(query, ';'); idx >= 0 {
+		query = query[:idx]
+	}
+	// msg changes.
+	if query == "show variables" {
+		return &protocol.Cond{Type: protocol.COND_NORMAL, Result: &protocol.MySQLResult{
+			Fields: []*protocol.Field{
+				{Name: "Variable_name", Type: protocol.Type_VARCHAR},
+				{Name: "Value", Type: protocol.Type_VARCHAR},
+			},
+			Rows: [][][]byte{
+				{[]byte("wait_timeout"), []byte("28800")},
+				{[]byte("autocommit"), []byte("ON")},
+			},
+		}}
+	}
+	if strings.HasPrefix(query, "set") {
+		return &protocol.Cond{Type: protocol.COND_NORMAL, Result: &protocol.MySQLResult{}}
+	}
+
+	return nil
 }

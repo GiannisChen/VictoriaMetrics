@@ -69,6 +69,9 @@ func (s *Session) Close() {
 }
 
 func (s *Session) WriteTextRows(result protocol.Result) error {
+	if result == nil {
+		result = &protocol.MySQLResult{}
+	}
 	if result.ColumnSize() == 0 {
 		if result.GetState() == protocol.RStateNone {
 			// This is just an INSERT result, send an OK packet.

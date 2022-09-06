@@ -68,9 +68,9 @@ func getDefaultMaxConcurrentRequests() int {
 }
 
 func main() {
-	// Warning: debug add args, MUST remove when build.
+	// Warning: debug add args, MUST remove when built.
 	os.Args = append(os.Args, "-storageNode=127.0.0.1")
-	os.Args = append(os.Args, "-vmsqlSelectListenAddr=3306")
+	os.Args = append(os.Args, "-vmsqlSelectListenAddr=:3306")
 	// Write flags and help message to stdout, since it is easier to grep or pipe.
 	flag.CommandLine.SetOutput(os.Stdout)
 	flag.Usage = usage

@@ -32,6 +32,8 @@ require (
 	vitess.io/vitess v0.14.0
 )
 
+require github.com/bkaradzic/go-lz4 v1.0.0
+
 require (
 	cloud.google.com/go v0.97.0 // indirect
 	github.com/VividCortex/ewma v1.2.0 // indirect

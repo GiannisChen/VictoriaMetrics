@@ -30,7 +30,6 @@ func TestParseSuccess(t *testing.T) {
 		{sql: "select a,b, c, d from e where a='b' AND c in ('a','b','c')", t: "SELECT"},
 		{sql: "select sum(ceil(a)),b, c, d from e where a='b' group by (a,b,c) order by (a,b) DESC limit 2", t: "SELECT"},
 		{sql: `select sum(voltage) from a where timestamp in ['0':'1':10] AND city in ("nanjing", "beijing") AND voltage <= 1 GROUP by (city)`, t: "SELECT"},
-
 		{sql: `DESCRIBE TABLE a`, t: "DESCRIBE"},
 	}
 	for _, tcase := range testcases {

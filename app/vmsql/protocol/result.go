@@ -38,11 +38,13 @@ type Cond struct {
 }
 
 func (c *Cond) SetError(err error) *Cond {
+	c.Type = COND_ERROR
 	c.Error = err
 	return c
 }
 
 func (c *Cond) SetResult(convert Result) *Cond {
+	c.Type = COND_NORMAL
 	c.Result = convert
 	return c
 }
@@ -102,7 +104,6 @@ type MySQLResult struct {
 	InsertID     uint64 `json:"insert_id"`
 	Warnings     uint16 `json:"warnings"`
 	State        ResultState
-	Result
 }
 
 func (m *MySQLResult) ColumnSize() int {
@@ -147,7 +148,6 @@ type TimeSeriesResult struct {
 	InsertID     uint64 `json:"insert_id"`
 	Warnings     uint16 `json:"warnings"`
 	State        ResultState
-	Result
 }
 
 func (t *TimeSeriesResult) ColumnSize() int {

@@ -12,21 +12,21 @@ func TestTransSelectStatement(t *testing.T) {
 	}{
 		{id: "SELECT_01", sql: `select * from a`},
 		{id: "SELECT_02", sql: `select * from a where city in ("nanjing", "beijing") AND voltage <= 1`},
-		{id: "SELECT_03", sql: `select sum(voltage) from a where timestamp in [0:1:'10s'] AND city in ("nanjing", "beijing") AND voltage <= 1 GROUP by city`},
+		{id: "SELECT_03", sql: `select sum(voltage) from a where timestamp in ["0":"1":1000] AND city in ("nanjing", "beijing") AND voltage <= 1 GROUP by (city)`},
 		{id: "SELECT_04", sql: `select exp(ln(clamp_min(voltage, 5))), max(ln(humidity)), temperature from a where city in ("nanjing", "beijing") AND voltage <= 1 AND area = "a" OR area = "b" GROUP by city limit 1`},
 	}
 
 	table := &Table{
 		TableName: "a",
 		Columns: []*Column{
-			{"city", reflect.String, true, true, ""},
-			{"area", reflect.String, true, true, ""},
-			{"workshop", reflect.String, true, true, ""},
-			{"machine", reflect.String, true, true, ""},
-			{"voltage", reflect.Float64, false, true, ""},
-			{"electricity", reflect.Float64, false, true, ""},
-			{"humidity", reflect.Float64, false, true, ""},
-			{"temperature", reflect.Float64, false, true, ""}},
+			{"city", reflect.String, true, ""},
+			{"area", reflect.String, true, ""},
+			{"workshop", reflect.String, true, ""},
+			{"machine", reflect.String, true, ""},
+			{"voltage", reflect.Float64, false, ""},
+			{"electricity", reflect.Float64, false, ""},
+			{"humidity", reflect.Float64, false, ""},
+			{"temperature", reflect.Float64, false, ""}},
 		ColMap: map[string]*Column{},
 	}
 	for _, column := range table.Columns {

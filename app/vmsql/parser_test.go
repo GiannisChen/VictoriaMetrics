@@ -9,8 +9,8 @@ func TestParseSuccess(t *testing.T) {
 		sql string
 		t   string
 	}{
-		{sql: "CREATE TABLE a (test INT TAG NOT NULL, test2 FLOAT TAG, test3 FLOAT VALUE DEFAULT 1.0)", t: "CREATE"},
-		{sql: "CREATE TABLE a (test INT TAG default 12, test2 STRING TAG default 'aab', test3 FLOAT VALUE NOT NULL);", t: "CREATE"},
+		{sql: "CREATE TABLE a (test INT TAG, test2 FLOAT TAG, test3 FLOAT VALUE DEFAULT 1.0)", t: "CREATE"},
+		{sql: "CREATE TABLE a (test INT TAG default 12, test2 STRING TAG default 'aab', test3 FLOAT VALUE);", t: "CREATE"},
 
 		{sql: "INSERT INTO a VALUES (1,2),(6,7,7)", t: "INSERT"},
 		{sql: "INSERT INTO a * VALUES (1,2),(6,7,7)", t: "INSERT"},
@@ -29,7 +29,7 @@ func TestParseSuccess(t *testing.T) {
 		{sql: "select a,b, c, d from e where a='b'", t: "SELECT"},
 		{sql: "select a,b, c, d from e where a='b' AND c in ('a','b','c')", t: "SELECT"},
 		{sql: "select sum(ceil(a)),b, c, d from e where a='b' group by (a,b,c) order by (a,b) DESC limit 2", t: "SELECT"},
-		{sql: `select sum(voltage) from a where timestamp in [0:1:'10s'] AND city in ("nanjing", "beijing") AND voltage <= 1 GROUP by (city)`, t: "SELECT"},
+		{sql: `select sum(voltage) from a where timestamp in ["0":"1":1000] AND city in ("nanjing", "beijing") AND voltage <= 1 GROUP by (city)`, t: "SELECT"},
 
 		{sql: `DESCRIBE TABLE a`, t: "DESCRIBE"},
 	}

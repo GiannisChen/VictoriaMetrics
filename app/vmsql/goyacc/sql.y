@@ -259,7 +259,7 @@ select_statement:
 	{
 		$$ = &SelectStatement{
 			TableName: $4,
-			IsStar: true,
+			IsStar: false,
 			Columns: $2,
 			WhereFilter: $5,
 			GroupBy: $6,

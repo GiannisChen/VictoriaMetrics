@@ -389,8 +389,12 @@ func ResultConvert(stmt *vmsql.SelectStatement, table *vmsql.Table, res []netsto
 				Data: make([]netstorage.Result, len(r.TVFields)),
 			}
 			for _, tag := range re.MetricName.Tags {
-				block.Tags[r.TagFieldsToIndexMap[string(tag.Key)]] = tag.Value
+				if i, ok := r.TagFieldsToIndexMap[string(tag.Key)]; ok {
+					block.Tags[i] = tag.Value
+				}
 			}
+			m[key] = len(r.Blocks)
+			r.Blocks = append(r.Blocks, block)
 		} else {
 			block = r.Blocks[idx]
 		}

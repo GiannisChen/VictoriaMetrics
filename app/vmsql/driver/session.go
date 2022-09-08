@@ -139,17 +139,19 @@ func (s *Session) appendTextRowsFromTSResult(result *protocol.TimeSeriesResult) 
 				timeList[timestamp]++
 			}
 		}
-		width := len(block.Data)
+		width := len(block.Data) - 1
 		var ts int64
-		for ; idx[0] < len(block.Data[0].Timestamps); idx[0]++ {
-			if c, _ := timeList[block.Data[0].Timestamps[idx[0]]]; c == width {
+		// Block.Data[0] represents timestamp
+		for ; idx[1] < len(block.Data[1].Timestamps); idx[1]++ {
+			if c, _ := timeList[block.Data[1].Timestamps[idx[1]]]; c == width {
 				rowBuf := common.NewBuffer(16)
-				ts = block.Data[0].Timestamps[idx[0]]
-				rowBuf.WriteLenEncodeString(time.UnixMilli(ts).Format("2006-01-02T15:04:05.999Z07:00"))
+				ts = block.Data[1].Timestamps[idx[1]]
 				for _, tag := range block.Tags {
 					rowBuf.WriteLenEncodeBytes(tag)
 				}
-				for i := 0; i < len(idx); i++ {
+				//rowBuf.WriteLenEncodeString(strconv.FormatInt(ts, 10))
+				rowBuf.WriteLenEncodeString(time.UnixMilli(ts).Format("2006-01-02 15:04:05.999"))
+				for i := 1; i < len(idx); i++ {
 					for block.Data[i].Timestamps[idx[i]] < ts {
 						idx[i]++
 					}

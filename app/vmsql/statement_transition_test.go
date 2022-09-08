@@ -41,13 +41,13 @@ func TestTransSelectStatement(t *testing.T) {
 				return
 			}
 			tokenizer := NewStringTokenizer(sql)
-			if yyParsePooled(tokenizer) != 0 {
-				if tokenizer.partialDDL != nil {
+			if YyParsePooled(tokenizer) != 0 {
+				if tokenizer.PartialDDL != nil {
 					if typ, val := tokenizer.Scan(); typ != 0 {
 						t.Errorf("extra characters encountered after end of DDL: '%s'", val)
 					}
 					t.Logf("ignoring error parsing DDL '%s': %v", sql, tokenizer.LastError)
-					tokenizer.ParseTree = tokenizer.partialDDL
+					tokenizer.ParseTree = tokenizer.PartialDDL
 				}
 				t.Log(tokenizer.LastError.Error())
 			}

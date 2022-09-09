@@ -70,7 +70,10 @@ func (s *Session) Close() {
 
 func (s *Session) WriteTextRows(result protocol.Result) error {
 	if result == nil {
-		result = &protocol.MySQLResult{}
+		result = &protocol.MySQLResult{
+			Fields: []*protocol.Field{},
+			State:  protocol.RStateNone,
+		}
 	}
 	if result.ColumnSize() == 0 {
 		if result.GetState() == protocol.RStateNone {

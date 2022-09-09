@@ -88,7 +88,7 @@ func main() {
 	logger.Infof("started netstorage in %.3f seconds", time.Since(startTime).Seconds())
 
 	if len(*vmsqlSelectListenAddr) > 0 {
-		vmsqlSelectServer = vmsqlserver.MustStart(*vmsqlSelectListenAddr, "vmsql")
+		vmsqlSelectServer = vmsqlserver.MustStart(*vmsqlSelectListenAddr, "5.7.12-vmsql")
 	}
 
 	if len(*cacheDataPath) > 0 {

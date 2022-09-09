@@ -114,10 +114,9 @@ func (s *Server) handle(conn net.Conn, id uint32) {
 	var authPkt []byte
 	var greetingPkt []byte
 
-	session := newSession(id, s.ServerVersion(), conn)
 	// Skip session check.
-
 	// Session register.
+	session := newSession(id, s.ServerVersion(), conn)
 	s.RegisterSession(session)
 	defer s.SessionClosed(session)
 
@@ -193,7 +192,7 @@ func (s *Server) handle(conn net.Conn, id uint32) {
 			if err = s.ComQuery(session, query, func(qr protocol.Result) error {
 				return session.WriteTextRows(qr)
 			}); err != nil {
-				logger.Errorf("server.handle.query.from.session[%v].error:%+v.query[%s]", id, err, query)
+				logger.Errorf("server handle query from session[%v] error:%+v query[%s]", id, err, query)
 				if werr := session.writeErrFromError(err); werr != nil {
 					return
 				}
@@ -220,6 +219,9 @@ func (s *Server) RegisterSession(session *Session) {
 
 func (s *Server) SessionClosed(session *Session) {
 	s.mu.Lock()
+	if _, ok := s.ss[session.id]; !ok {
+		s.ss[session.id].Close()
+	}
 	delete(s.ss, session.id)
 	s.mu.Unlock()
 }

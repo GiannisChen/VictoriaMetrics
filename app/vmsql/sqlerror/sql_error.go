@@ -3,6 +3,8 @@ package sqlerror
 import (
 	"bytes"
 	"fmt"
+	"regexp"
+	"strconv"
 )
 
 const (
@@ -56,6 +58,43 @@ func NewSQLErrorWithState(number uint16, state string, format string, args ...in
 		Num:     number,
 		State:   state,
 		Message: fmt.Sprintf(format, args...),
+	}
+}
+
+var errExtract = regexp.MustCompile(`.*\(errno ([0-9]*)\) \(sqlstate ([0-9a-zA-Z]{5})\).*`)
+
+func NewSQLErrorFromError(err error) error {
+	if err == nil {
+		return nil
+	}
+	if serr, ok := err.(*SQLError); ok {
+		return serr
+	}
+
+	msg := err.Error()
+	match := errExtract.FindStringSubmatch(msg)
+	if len(match) < 2 {
+		unknown := SQLErrors[ER_UNKNOWN_ERROR]
+		return &SQLError{
+			Num:     unknown.Num,
+			State:   unknown.State,
+			Message: msg,
+		}
+	}
+	num, err := strconv.Atoi(match[1])
+	if err != nil {
+		unknown := SQLErrors[ER_UNKNOWN_ERROR]
+		return &SQLError{
+			Num:     unknown.Num,
+			State:   unknown.State,
+			Message: msg,
+		}
+	}
+
+	return &SQLError{
+		Num:     uint16(num),
+		State:   match[2],
+		Message: msg,
 	}
 }
 

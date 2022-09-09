@@ -30,6 +30,14 @@ func (c *Column) JsonString() string {
 	return string(bs)
 }
 
+func (c *Column) StringTag() string {
+	if c.Tag {
+		return "TAG"
+	} else {
+		return "VALUE"
+	}
+}
+
 func Get(ctx context.Context, tableName string) (*Table, error) {
 	// cli.Get -> []byte
 	if tableName != "a" {

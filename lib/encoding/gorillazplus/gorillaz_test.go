@@ -38,7 +38,7 @@ func TestCompressDecompressInts(t *testing.T) {
 			}
 			l1 := float64(len(bytes)) / float64(len(values)*8)
 
-			bytes, _, err = gorillaz.Compress(make([]byte, 0), values)
+			bytes = gorillaz.Compress(make([]byte, 0), values)
 			l2 := float64(len(bytes)) / float64(len(values)*8)
 			if _, err := w.WriteString(fmt.Sprintf("%.8f,%.8f\n", l1, l2)); err != nil {
 				t.Fatal(err)
@@ -56,7 +56,7 @@ func TestCompressDecompressInts(t *testing.T) {
 			}
 			l1 := float64(len(bytes)) / (8192.0 * 8)
 
-			bytes, _, err = gorillaz.Compress(make([]byte, 0), values[i:i+8192])
+			bytes = gorillaz.Compress(make([]byte, 0), values[i:i+8192])
 			l2 := float64(len(bytes)) / (8192.0 * 8)
 			if _, err := w.WriteString(fmt.Sprintf("%.8f,%.8f\n", l1, l2)); err != nil {
 				t.Fatal(err)
@@ -68,7 +68,7 @@ func TestCompressDecompressInts(t *testing.T) {
 		}
 		l1 := float64(len(bytes)) / (8192.0 * 8)
 
-		bytes, _, err = gorillaz.Compress(make([]byte, 0), values[len(values)-8192:])
+		bytes = gorillaz.Compress(make([]byte, 0), values[len(values)-8192:])
 		l2 := float64(len(bytes)) / (8192.0 * 8)
 		if _, err := w.WriteString(fmt.Sprintf("%.8f,%.8f\n", l1, l2)); err != nil {
 			t.Fatal(err)
